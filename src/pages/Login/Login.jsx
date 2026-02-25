@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import './Login.css'
 import kidsImg from '../../assets/images/kids.png'
 import TextField from '@mui/material/TextField'
+import MenuItem from '@mui/material/MenuItem'
 import Checkbox from '@mui/material/Checkbox'
 import FormControlLabel from '@mui/material/FormControlLabel'
 import IconButton from '@mui/material/IconButton'
@@ -17,16 +18,19 @@ const Login = () => {
     password: '',
     mobileNumber: '',
     remember: false,
+    role: '',
   })
 
   const [showPassword, setShowPassword] = useState(false)
   const [otpSent, setOtpSent] = useState(false)
   const [otpInput, setOtpInput] = useState('')
+  const [roleError, setRoleError] = useState(false)
   const [loginMode, setLoginMode] = useState('email') // 'email' or 'mobile'
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
     setFormData((p) => ({ ...p, [name]: type === 'checkbox' ? checked : value }))
+    if (name === 'role') setRoleError(false)
   }
 
   // Ensure mobile input accepts only digits and max 10 characters
@@ -50,6 +54,10 @@ const Login = () => {
     if (loginMode === 'email') {
       const email = (formData.email || '').trim()
       const pwd = formData.password || ''
+        if (!formData.role) {
+          setRoleError(true)
+          return
+        }
       if (!email || !pwd) {
         alert('Please enter email and password')
         return
@@ -59,6 +67,7 @@ const Login = () => {
         return
       }
       if (email === 'admin@gmail.com' && pwd === 'Admin@123') {
+        console.log('Submitting credentials', { email, password: pwd, role: formData.role })
         alert('Login Successful')
       } else {
         alert('Invalid Credentials')
@@ -147,6 +156,33 @@ const Login = () => {
 
               {loginMode === 'email' && (
                 <>
+                  <div className="mt-2">
+                    <label className="input-label">Role</label>
+                    <TextField
+                      select
+                      name="role"
+                      variant="outlined"
+                      value={formData.role}
+                      onChange={handleChange}
+                      fullWidth
+                      size="small"
+                      displayEmpty
+                      error={roleError}
+                      helperText={roleError ? 'Please select a role' : ''}
+                      SelectProps={{
+                        renderValue: (selected) => {
+                          if (!selected) return 'Select Role'
+                          return selected
+                        },
+                      }}
+                    >
+                      <MenuItem value="">Select Role</MenuItem>
+                      <MenuItem value="Admin">Admin</MenuItem>
+                      <MenuItem value="Teacher">Teacher</MenuItem>
+                      <MenuItem value="Parent">Parent</MenuItem>
+                      <MenuItem value="FrontOffice">FrontOffice</MenuItem>
+                    </TextField>
+                  </div>
                   <label className="input-label">Email address</label>
                   <TextField
                     name="email"
@@ -225,6 +261,8 @@ const Login = () => {
                       />
                     </div>
                   )}
+
+                  
                 </>
               )}
 
