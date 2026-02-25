@@ -3,6 +3,7 @@ import { Routes, Route } from 'react-router-dom'
 import Login from './pages/Login/Login'
 import ForgotPassword from './pages/Login/Forgot password/ForgotPassword'
 import ForgotOtp from './pages/Login/Forgot password/ForgotOtp'
+import ResetPassword from './pages/Login/Settings/ResetPassword'
 
 const App = () => {
   return (
@@ -10,6 +11,7 @@ const App = () => {
       <Route path="/" element={<Login />} />
       <Route path="/forgot" element={<ForgotPassword />} />
       <Route path="/forgot-otp" element={<ForgotOtp />} />
+      <Route path="/reset" element={<ResetPassword />} />
     </Routes>
   )
 }
