@@ -105,6 +105,7 @@ const Login = () => {
     }
     // use static OTP 6744 per requirement
     const otp = '6744'
+    setGeneratedOtp(otp)
     setOtpSent(true)
     setOtpInput('')
     // since no SMS backend, show OTP in alert (for testing)
