@@ -1,0 +1,202 @@
+/* Login Page Styles (Bootstrap + MUI hybrid) */
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&display=swap');
+
+* { box-sizing: border-box; }
+
+body { font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+
+.login-container { background-color: white; }
+
+.login-left-section { background-color: #9FD647; color: white; }
+
+.login-branding { display:flex; align-items:center; gap:12px; }
+.schoolers-logo { font-size:28px; background: rgba(255,255,255,0.25); border-radius:50%; width:52px; height:52px; display:flex; align-items:center; justify-content:center; }
+.schoolers-title { font-size:30px; font-weight:700; color:#1a1a1a; }
+
+.login-tagline h2 { font-size:34px; line-height:1.05; font-weight:600; margin:0; }
+
+.login-kids-image { width:100%; max-width:560px; height:auto; display:flex; align-items:center; justify-content:center; }
+.login-kids-image img { width:100%; height:auto; object-fit:contain; }
+
+.input-label { display:block; font-family: 'Poppins', sans-serif; font-weight:500; font-size:16px; color:#111; margin-bottom:8px; }
+
+.password-helper { font-family: 'Poppins', sans-serif; font-size:13px; color:#6c6c6c; margin-top:6px; }
+
+.login-form-container { width:100%; max-width:520px; background:white; border-radius:18px; box-shadow:0 8px 30px rgba(0,0,0,0.06); }
+.login-heading { font-size:36px; font-weight:700; color:#111; margin-bottom:6px; }
+.login-subheading { color:#7a7a7a; margin-bottom:18px; font-size:15px; }
+
+.divider-container { display:flex; align-items:center; gap:10px; }
+.divider-line { flex:1; height:1px; background:#e6e6e6; }
+.divider-text { font-size:13px; color:#999; padding:0 8px; }
+
+.forgot-password-link { color:#6f42c1; text-decoration:none; font-size:15px; }
+.forgot-password-link:hover { color:#4e2fa8; }
+
+.send-otp-btn { border-radius:8px; }
+
+.login-btn { background: linear-gradient(135deg,#a8d963 0%,#b8e86f 100%); color: white; border-radius:36px; padding:14px 28px; font-weight:700; font-size:18px; }
+.login-btn:hover { box-shadow:0 12px 24px rgba(168,217,99,0.25); }
+
+/* adjust MUI input appearance to match screenshot */
+.login-form .MuiOutlinedInput-root { border-radius:10px; }
+.login-form .MuiInputLabel-root { font-weight:600; }
+.login-form .MuiFormHelperText-root { font-size:12px }
+
+/* place Send OTP text to the right on mobile by adjusting button */
+.send-otp-btn { align-self:flex-end; }
+
+/* ensure password row has forgot link aligned */
+.login-form .password-row { width:100%; display:flex; justify-content:space-between; align-items:center; }
+
+/* checkbox label larger */
+.MuiFormControlLabel-label { font-size:16px; font-family: 'Poppins', sans-serif; font-weight:500 }
+
+/* Ensure input text size and font match labels */
+.login-form .MuiInputBase-input { font-size:16px; font-family: 'Poppins', sans-serif; }
+.login-form .MuiOutlinedInput-root { min-height:48px; }
+
+/* Responsive adjustments */
+@media (max-width: 991px) {
+  .login-tagline h2 { font-size:28px; }
+  .schoolers-title { font-size:26px; }
+}
+
+@media (max-width: 767px) {
+  .login-left-section { padding:28px 20px; }
+  .login-kids-image img { max-width:280px; }
+  .login-form-container { border-radius:16px; padding:24px; }
+  .login-heading { font-size:22px; }
+}
+
+@media (max-width: 480px) {
+  .login-tagline h2 { font-size:20px; }
+  .schoolers-title { font-size:20px; }
+  .schoolers-logo { width:40px; height:40px; font-size:20px; }
+  .login-kids-image img { max-width:180px; }
+  .login-form-container { padding:18px; border-radius:12px; }
+}
+
+/* small utility tweaks to match design */
+.login-left-section { padding:48px; }
+.login-form-container { padding:40px; }
+.login-subheading { margin-bottom:20px; }
+.ms-3 { margin-left:1rem !important; }
+  
+
+  .login-subheading {
+    font-size: 12px;
+    margin-bottom: 20px;
+  }
+
+  .green-bg {
+    background-color: #9FD647;
+  }
+  .login-form {
+    gap: 18px;
+  }
+
+  .form-input {
+    padding: 11px 14px;
+    font-size: 13px;
+  }
+
+  .password-label-container {
+    font-size: 12px;
+  }
+
+  .forgot-password-link {
+    font-size: 11px;
+  }
+
+  .send-otp-btn {
+    padding: 10px 16px;
+    font-size: 11px;
+  }
+
+  .login-button {
+    padding: 12px 20px;
+    font-size: 14px;
+  }
+
+  .mobile-input-wrapper {
+    gap: 6px;
+  }
+
+  .checkbox-group {
+    gap: 10px;
+  }
+
+  .checkbox-label {
+    font-size: 12px;
+  }
+
+
+/* Small Mobile (320px and below) */
+@media (max-width: 320px) {
+  .login-left-section {
+    padding: 20px 15px;
+  }
+
+  .schoolers-title {
+    font-size: 20px;
+  }
+
+  .login-tagline p {
+    font-size: 16px;
+  }
+
+  .login-kids-image {
+    width: 120px;
+    height: 120px;
+  }
+
+  .login-form-container {
+    padding: 20px 15px;
+  }
+
+  .login-heading {
+    font-size: 18px;
+  }
+
+  .form-input {
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+
+  .send-otp-btn {
+    padding: 9px 12px;
+    font-size: 10px;
+  }
+}
+
+/* Landscape Mode (max-height 500px) */
+@media (max-height: 500px) {
+  .login-container {
+    min-height: auto;
+  }
+
+  .login-left-section {
+    padding: 30px 20px;
+    min-height: auto;
+  }
+
+  .login-kids-image {
+    width: 120px;
+    height: 120px;
+  }
+
+  .login-tagline p {
+    font-size: 18px;
+  }
+
+  .login-right-section {
+    padding: 20px;
+    min-height: auto;
+  }
+
+  .login-form-container {
+    padding: 30px 25px;
+  }
+}
