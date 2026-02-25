@@ -2,9 +2,10 @@ import React, { useState } from 'react'
 import './ForgotPassword.css'
 import forgotImg from '../../../assets/images/forgot.png'
 import otpIcon from '../../../assets/images/otp.png'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 const ForgotPassword = () => {
+  const navigate = useNavigate()
   const [identifier, setIdentifier] = useState('')
   const [error, setError] = useState('')
 
@@ -37,16 +38,16 @@ const ForgotPassword = () => {
         setError('Please enter a valid email address')
         return
       }
+      // Navigate to OTP verification page with email
+      navigate('/forgot-otp', { state: { email: identifier } })
     } else {
       if (!mobileRegex.test(identifier)) {
         setError('Mobile number must be exactly 10 digits')
         return
       }
+      // Navigate to OTP verification page with mobile number
+      navigate('/forgot-otp', { state: { mobileNumber: identifier } })
     }
-
-    alert('OTP sent successfully (Dummy)')
-    setIdentifier('')
-    setError('')
   }
 
   return (
