@@ -11,13 +11,13 @@ body { font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
 .login-left-section { background-color: #9FD647; color: white; }
 
 .login-branding { display:flex; align-items:center; gap:12px; }
-.schoolers-logo { font-size:28px; background: rgba(255,255,255,0.25); border-radius:50%; width:52px; height:52px; display:flex; align-items:center; justify-content:center; }
-.schoolers-title { font-size:30px; font-weight:700; color:#1a1a1a; }
+.schoolers-logo { font-size:28px; background: rgba(255,255,255,0.15); border-radius:50%; width:48px; height:48px; display:flex; align-items:center; justify-content:center; }
+.schoolers-title { font-size:36px; font-weight:700; color:#1a1a1a; }
 
 .login-tagline h2 { font-size:34px; line-height:1.05; font-weight:600; margin:0; }
 
 .login-kids-image { width:100%; max-width:560px; height:auto; display:flex; align-items:center; justify-content:center; }
-.login-kids-image img { width:100%; height:auto; object-fit:contain; }
+.login-kids-image img { width:100%; max-width:560px; height:auto; object-fit:contain; }
 
 .input-label { display:block; font-family: 'Poppins', sans-serif; font-weight:500; font-size:16px; color:#111; margin-bottom:8px; }
 
@@ -61,12 +61,12 @@ body { font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
 /* Responsive adjustments */
 @media (max-width: 991px) {
   .login-tagline h2 { font-size:28px; }
-  .schoolers-title { font-size:26px; }
+  .schoolers-title { font-size:28px; }
 }
 
 @media (max-width: 767px) {
   .login-left-section { padding:28px 20px; }
-  .login-kids-image img { max-width:280px; }
+  .login-kids-image img { max-width:300px; }
   .login-form-container { border-radius:16px; padding:24px; }
   .login-heading { font-size:22px; }
 }
@@ -75,63 +75,17 @@ body { font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
   .login-tagline h2 { font-size:20px; }
   .schoolers-title { font-size:20px; }
   .schoolers-logo { width:40px; height:40px; font-size:20px; }
-  .login-kids-image img { max-width:180px; }
+  .login-kids-image img { max-width:200px; }
   .login-form-container { padding:18px; border-radius:12px; }
 }
 
 /* small utility tweaks to match design */
-.login-left-section { padding:48px; }
+.login-left-section { padding:56px; }
 .login-form-container { padding:40px; }
 .login-subheading { margin-bottom:20px; }
 .ms-3 { margin-left:1rem !important; }
-  
-
-  .login-subheading {
-    font-size: 12px;
-    margin-bottom: 20px;
-  }
-
-  .green-bg {
-    background-color: #9FD647;
-  }
-  .login-form {
-    gap: 18px;
-  }
-
-  .form-input {
-    padding: 11px 14px;
-    font-size: 13px;
-  }
-
-  .password-label-container {
-    font-size: 12px;
-  }
-
-  .forgot-password-link {
-    font-size: 11px;
-  }
-
-  .send-otp-btn {
-    padding: 10px 16px;
-    font-size: 11px;
-  }
-
-  .login-button {
-    padding: 12px 20px;
-    font-size: 14px;
-  }
-
-  .mobile-input-wrapper {
-    gap: 6px;
-  }
-
-  .checkbox-group {
-    gap: 10px;
-  }
-
-  .checkbox-label {
-    font-size: 12px;
-  }
+.green-bg { background-color: #9FD647; }
+.login-form { gap: 18px; }
 
 
 /* Small Mobile (320px and below) */
@@ -159,16 +113,6 @@ body { font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
 
   .login-heading {
     font-size: 18px;
-  }
-
-  .form-input {
-    padding: 10px 12px;
-    font-size: 12px;
-  }
-
-  .send-otp-btn {
-    padding: 9px 12px;
-    font-size: 10px;
   }
 }
 
