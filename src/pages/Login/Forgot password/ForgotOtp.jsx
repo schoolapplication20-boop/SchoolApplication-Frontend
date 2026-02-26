@@ -56,7 +56,7 @@ const ForgotOtp = () => {
 
     if (enteredOtp === DUMMY_OTP) {
       alert('OTP Verified Successfully')
-      navigate('/reset-password', { state: { mobileNumber, email, identifier } })
+      navigate('/change-password', { state: { mobileNumber, email, identifier } })
     } else {
       setError('Invalid OTP. Please try again.')
       setOtp(['', '', '', ''])
