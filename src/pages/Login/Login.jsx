@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import './Login.css'
 import kidsImg from '../../assets/images/kids.png'
 import TextField from '@mui/material/TextField'
@@ -10,9 +10,15 @@ import InputAdornment from '@mui/material/InputAdornment'
 import Button from '@mui/material/Button'
 import Visibility from '@mui/icons-material/Visibility'
 import VisibilityOff from '@mui/icons-material/VisibilityOff'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import {
+  DUMMY_RESET_CREDENTIALS,
+  getStoredCredentials,
+  setStoredCredentials,
+} from '../../utils/authStorage'
 
 const Login = () => {
+  const navigate = useNavigate()
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -24,8 +30,19 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [otpSent, setOtpSent] = useState(false)
   const [otpInput, setOtpInput] = useState('')
+  const [otpTimer, setOtpTimer] = useState(0)
   const [roleError, setRoleError] = useState(false)
-  const [loginMode, setLoginMode] = useState('email') // 'email' or 'mobile'
+  const [loginMode, setLoginMode] = useState('email')
+
+  useEffect(() => {
+    if (!otpSent || otpTimer <= 0) return undefined
+
+    const intervalId = setInterval(() => {
+      setOtpTimer((prev) => (prev > 0 ? prev - 1 : 0))
+    }, 1000)
+
+    return () => clearInterval(intervalId)
+  }, [otpSent, otpTimer])
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
@@ -33,7 +50,6 @@ const Login = () => {
     if (name === 'role') setRoleError(false)
   }
 
-  // Ensure mobile input accepts only digits and max 10 characters
   const handleMobileChange = (e) => {
     const digits = (e.target.value || '').replace(/\D/g, '').slice(0, 10)
     setFormData((p) => ({ ...p, mobileNumber: digits }))
@@ -54,10 +70,12 @@ const Login = () => {
     if (loginMode === 'email') {
       const email = (formData.email || '').trim()
       const pwd = formData.password || ''
-        if (!formData.role) {
-          setRoleError(true)
-          return
-        }
+      const storedCredentials = getStoredCredentials()
+
+      if (!formData.role) {
+        setRoleError(true)
+        return
+      }
       if (!email || !pwd) {
         alert('Please enter email and password')
         return
@@ -66,16 +84,22 @@ const Login = () => {
         alert('Email must be a @gmail.com address')
         return
       }
-      if (email === 'admin@gmail.com' && pwd === 'Admin@123') {
-        console.log('Submitting credentials', { email, password: pwd, role: formData.role })
-        alert('Login Successful')
+
+      if (email === storedCredentials.email && pwd === storedCredentials.password) {
+        if (storedCredentials.needsPasswordReset) {
+          navigate('/reset-password', { state: { fromDefaultLogin: true } })
+          return
+        }
+        navigate('/dashboard')
+      } else if (DUMMY_RESET_CREDENTIALS.some((cred) => cred.email === email && cred.password === pwd)) {
+        setStoredCredentials({ email, password: pwd, needsPasswordReset: true })
+        navigate('/reset-password', { state: { fromDefaultLogin: true } })
       } else {
         alert('Invalid Credentials')
       }
       return
     }
 
-    // mobile mode
     const mobile = (formData.mobileNumber || '').replace(/\D/g, '')
     if (!/^[0-9]{10}$/.test(mobile)) {
       alert('Mobile number must be exactly 10 digits')
@@ -89,9 +113,13 @@ const Login = () => {
       alert('Enter the 4-digit OTP')
       return
     }
-    // Dummy mobile credentials: mobile 9876543210 and OTP 6744
+    if (otpTimer === 0) {
+      alert('OTP expired. Please click Send OTP again.')
+      return
+    }
+
     if (mobile === '9390417936' && otpInput === '6744') {
-      alert('Login Successful')
+      navigate('/dashboard')
     } else {
       alert('Invalid Credentials')
     }
@@ -103,19 +131,16 @@ const Login = () => {
       alert('Enter a valid 10-digit mobile number before requesting OTP')
       return
     }
-    // use static OTP 6744 per requirement
     const otp = '6744'
-    setGeneratedOtp(otp)
     setOtpSent(true)
     setOtpInput('')
-    // since no SMS backend, show OTP in alert (for testing)
+    setOtpTimer(10)
     alert(`OTP (for testing): ${otp}`)
   }
 
   return (
     <div className="login-container container-fluid p-0">
       <div className="row g-0 min-vh-100">
-        {/* Left */}
         <div className="col-12 col-md-6 login-left-section d-flex flex-column p-5">
           <div className="login-branding d-flex align-items-center mb-3">
             <div className="schoolers-logo">🏆</div>
@@ -136,7 +161,6 @@ const Login = () => {
           <div className="text-center text-white small mt-3">Digital It & Media Solutions Pvt Ltd</div>
         </div>
 
-        {/* Right */}
         <div className="col-12 col-md-6 d-flex align-items-center justify-content-center p-4 green-bg">
           <div className="login-form-container p-4 p-md-5">
             <h2 className="login-heading">Get Started Now</h2>
@@ -145,11 +169,37 @@ const Login = () => {
             <form onSubmit={handleSubmit} className="login-form">
               <div className="d-flex gap-3 mb-3">
                 <div className="form-check">
-                  <input className="form-check-input" type="radio" name="loginMode" id="modeEmail" value="email" checked={loginMode === 'email'} onChange={() => { setLoginMode('email'); setOtpSent(false); setOtpInput(''); }} />
+                  <input
+                    className="form-check-input"
+                    type="radio"
+                    name="loginMode"
+                    id="modeEmail"
+                    value="email"
+                    checked={loginMode === 'email'}
+                    onChange={() => {
+                      setLoginMode('email')
+                      setOtpSent(false)
+                      setOtpInput('')
+                      setOtpTimer(0)
+                    }}
+                  />
                   <label className="form-check-label" htmlFor="modeEmail">Login with Email</label>
                 </div>
                 <div className="form-check">
-                  <input className="form-check-input" type="radio" name="loginMode" id="modeMobile" value="mobile" checked={loginMode === 'mobile'} onChange={() => { setLoginMode('mobile'); setOtpSent(false); setOtpInput(''); }} />
+                  <input
+                    className="form-check-input"
+                    type="radio"
+                    name="loginMode"
+                    id="modeMobile"
+                    value="mobile"
+                    checked={loginMode === 'mobile'}
+                    onChange={() => {
+                      setLoginMode('mobile')
+                      setOtpSent(false)
+                      setOtpInput('')
+                      setOtpTimer(0)
+                    }}
+                  />
                   <label className="form-check-label" htmlFor="modeMobile">Login with Mobile</label>
                 </div>
               </div>
@@ -170,10 +220,7 @@ const Login = () => {
                       error={roleError}
                       helperText={roleError ? 'Please select a role' : ''}
                       SelectProps={{
-                        renderValue: (selected) => {
-                          if (!selected) return 'Select Role'
-                          return selected
-                        },
+                        renderValue: (selected) => (!selected ? 'Select Role' : selected),
                       }}
                     >
                       <MenuItem value="">Select Role</MenuItem>
@@ -259,10 +306,9 @@ const Login = () => {
                         size="small"
                         inputProps={{ inputMode: 'numeric', pattern: '[0-9]*', maxLength: 4 }}
                       />
+                      <div className="small text-muted mt-1">OTP expires in: {otpTimer}s</div>
                     </div>
                   )}
-
-                  
                 </>
               )}
 
@@ -276,8 +322,6 @@ const Login = () => {
               <Button type="submit" variant="contained" fullWidth size="large" className="login-btn mt-3" disabled={!formData.remember}>
                 Login
               </Button>
-
-              {/* Social sign-in removed as requested */}
             </form>
           </div>
         </div>
