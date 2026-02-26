@@ -1,9 +1,10 @@
-import React, { useState, useRef } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import './ForgotOtp.css'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import forgotImg from '../../../assets/images/forgot.png'
 
 const ForgotOtp = () => {
+  const OTP_VALIDITY_SECONDS = 45
   const navigate = useNavigate()
   const location = useLocation()
   const mobileNumber = location.state?.mobileNumber || ''
@@ -12,9 +13,27 @@ const ForgotOtp = () => {
 
   const [otp, setOtp] = useState(['', '', '', ''])
   const [error, setError] = useState('')
+  const [otpSecondsLeft, setOtpSecondsLeft] = useState(OTP_VALIDITY_SECONDS)
   const otpRefs = [useRef(), useRef(), useRef(), useRef()]
 
   const DUMMY_OTP = '1234'
+  const isOtpExpired = otpSecondsLeft === 0
+
+  useEffect(() => {
+    if (otpSecondsLeft <= 0) return
+
+    const intervalId = setInterval(() => {
+      setOtpSecondsLeft((prev) => (prev > 0 ? prev - 1 : 0))
+    }, 1000)
+
+    return () => clearInterval(intervalId)
+  }, [otpSecondsLeft])
+
+  const formatOtpTime = (seconds) => {
+    const mm = String(Math.floor(seconds / 60)).padStart(2, '0')
+    const ss = String(seconds % 60).padStart(2, '0')
+    return `${mm}:${ss}`
+  }
 
   const handleOtpChange = (index, value) => {
     // Allow only digits
@@ -40,8 +59,11 @@ const ForgotOtp = () => {
   }
 
   const handleResendOtp = () => {
+    if (!isOtpExpired) return
+
     setOtp(['', '', '', ''])
     setError('')
+    setOtpSecondsLeft(OTP_VALIDITY_SECONDS)
     otpRefs[0].current.focus()
     alert(`New OTP sent successfully (Dummy OTP: ${DUMMY_OTP})`)
   }
@@ -51,6 +73,11 @@ const ForgotOtp = () => {
 
     if (!enteredOtp || enteredOtp.length !== 4) {
       setError('Please enter all 4 digits')
+      return
+    }
+
+    if (isOtpExpired) {
+      setError('OTP expired. Please resend OTP.')
       return
     }
 
@@ -120,7 +147,10 @@ const ForgotOtp = () => {
 
             {/* Resend OTP Link */}
             <div className="text-center mb-4">
-              <button className="btn btn-link p-0 resend-otp-btn" onClick={handleResendOtp}>
+              <small className="otp-expiry-text d-block mb-2">
+                {isOtpExpired ? 'OTP expired. You can resend now.' : `OTP expires in ${formatOtpTime(otpSecondsLeft)}`}
+              </small>
+              <button className="btn btn-link p-0 resend-otp-btn" onClick={handleResendOtp} disabled={!isOtpExpired}>
                 Resend OTP
               </button>
             </div>

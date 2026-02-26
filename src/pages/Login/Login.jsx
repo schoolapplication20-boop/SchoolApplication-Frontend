@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import './Login.css'
 import kidsImg from '../../assets/images/kids.png'
 import TextField from '@mui/material/TextField'
@@ -13,6 +13,7 @@ import VisibilityOff from '@mui/icons-material/VisibilityOff'
 import { Link } from 'react-router-dom'
 
 const Login = () => {
+  const OTP_VALIDITY_SECONDS = 45
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -24,8 +25,27 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [otpSent, setOtpSent] = useState(false)
   const [otpInput, setOtpInput] = useState('')
+  const [otpSecondsLeft, setOtpSecondsLeft] = useState(0)
   const [roleError, setRoleError] = useState(false)
   const [loginMode, setLoginMode] = useState('email') // 'email' or 'mobile'
+
+  const isOtpExpired = otpSent && otpSecondsLeft === 0
+
+  useEffect(() => {
+    if (!otpSent || otpSecondsLeft <= 0) return
+
+    const intervalId = setInterval(() => {
+      setOtpSecondsLeft((prev) => (prev > 0 ? prev - 1 : 0))
+    }, 1000)
+
+    return () => clearInterval(intervalId)
+  }, [otpSent, otpSecondsLeft])
+
+  const formatOtpTime = (seconds) => {
+    const mm = String(Math.floor(seconds / 60)).padStart(2, '0')
+    const ss = String(seconds % 60).padStart(2, '0')
+    return `${mm}:${ss}`
+  }
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
@@ -100,6 +120,10 @@ const Login = () => {
       alert('Enter the 4-digit OTP')
       return
     }
+    if (isOtpExpired) {
+      alert('OTP expired. Please request a new OTP.')
+      return
+    }
     // Dummy mobile credentials: mobile 9876543210 and OTP 6744
     if (mobile === '9390417936' && otpInput === '6744') {
       alert('Login Successful')
@@ -109,6 +133,11 @@ const Login = () => {
   }
 
   const handleSendOTP = () => {
+    if (otpSent && !isOtpExpired) {
+      alert(`Please wait ${formatOtpTime(otpSecondsLeft)} before requesting a new OTP`)
+      return
+    }
+
     const mobile = (formData.mobileNumber || '').replace(/\D/g, '')
     if (!/^[0-9]{10}$/.test(mobile)) {
       alert('Enter a valid 10-digit mobile number before requesting OTP')
@@ -118,6 +147,7 @@ const Login = () => {
     const otp = '6744'
     setOtpSent(true)
     setOtpInput('')
+    setOtpSecondsLeft(OTP_VALIDITY_SECONDS)
     // since no SMS backend, show OTP in alert (for testing)
     alert(`OTP (for testing): ${otp}`)
   }
@@ -251,8 +281,8 @@ const Login = () => {
                       size="small"
                       inputProps={{ inputMode: 'numeric', pattern: '[0-9]*', maxLength: 10 }}
                     />
-                    <Button variant="outlined" onClick={handleSendOTP} className="send-otp-btn">
-                      Send OTP
+                    <Button variant="outlined" onClick={handleSendOTP} className="send-otp-btn" disabled={otpSent && !isOtpExpired}>
+                      {otpSent && !isOtpExpired ? `Resend in ${formatOtpTime(otpSecondsLeft)}` : 'Send OTP'}
                     </Button>
                   </div>
 
@@ -269,6 +299,9 @@ const Login = () => {
                         size="small"
                         inputProps={{ inputMode: 'numeric', pattern: '[0-9]*', maxLength: 4 }}
                       />
+                      <small className="otp-timer-text d-block mt-1">
+                        {isOtpExpired ? 'OTP expired. Click Send OTP to get a new code.' : `OTP expires in ${formatOtpTime(otpSecondsLeft)}`}
+                      </small>
                     </div>
                   )}
 

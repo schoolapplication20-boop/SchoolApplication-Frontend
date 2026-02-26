@@ -35,6 +35,7 @@ body { font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
 .forgot-password-link:hover { color:#4e2fa8; }
 
 .send-otp-btn { border-radius:8px; }
+.otp-timer-text { color:#6c757d; font-size:12px; }
 
 .login-btn { background: linear-gradient(135deg,#a8d963 0%,#b8e86f 100%); color: white; border-radius:36px; padding:14px 28px; font-weight:700; font-size:18px; }
 .login-btn:hover { box-shadow:0 12px 24px rgba(168,217,99,0.25); }

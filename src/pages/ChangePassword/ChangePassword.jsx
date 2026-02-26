@@ -39,7 +39,7 @@ const ChangePassword = () => {
     }
 
     // Check for password strength
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/
     if (!passwordRegex.test(formData.password)) {
       setError('Password must contain uppercase, lowercase, number and special character')
       return
@@ -47,8 +47,15 @@ const ChangePassword = () => {
 
     const email = (location.state?.email || '').trim().toLowerCase()
     const identifier = (location.state?.identifier || '').trim().toLowerCase()
-    const accountKey = email || identifier || 'admin@gmail.com'
-    localStorage.setItem(`schoolers_password_${accountKey}`, formData.password)
+
+    // Keep reset password aligned with email login key used in Login.jsx.
+    const loginAccountKey = email || 'admin@gmail.com'
+    localStorage.setItem(`schoolers_password_${loginAccountKey}`, formData.password)
+
+    // Also update identifier key when present to avoid breaking existing local demo data.
+    if (identifier && identifier !== loginAccountKey) {
+      localStorage.setItem(`schoolers_password_${identifier}`, formData.password)
+    }
 
     alert('Password changed successfully!')
     navigate('/')
@@ -92,7 +99,7 @@ const ChangePassword = () => {
             <label className="form-label">New Password</label>
             <div className="password-field no-toggle mb-3">
               <input
-                type="text"
+                type="password"
                 className="form-control form-control-lg change-password-input"
                 placeholder="Enter New Password"
                 name="password"
