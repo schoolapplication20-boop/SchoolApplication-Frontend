@@ -1,14 +1,20 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import './ResetPassword.css'
 import Visibility from '@mui/icons-material/Visibility'
 import VisibilityOff from '@mui/icons-material/VisibilityOff'
+import { getStoredCredentials, markPasswordResetSkipped, saveNewPassword } from '../../../utils/authStorage'
+import ResetSuccessfulScreen from './ResetSuccessfulScreen'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 const ResetPassword = () => {
+	const navigate = useNavigate()
+	const location = useLocation()
+	const isFromDefaultLogin = Boolean(location.state?.fromDefaultLogin)
 	const [previousPassword, setPreviousPassword] = useState('')
 	const [newPassword, setNewPassword] = useState('')
 	const [confirmPassword, setConfirmPassword] = useState('')
 	const [error, setError] = useState('')
-	const [success, setSuccess] = useState('')
+	const [showSuccessPopup, setShowSuccessPopup] = useState(false)
 	const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
 	const handleClickShowConfirmPassword = () => {
@@ -26,7 +32,8 @@ const ResetPassword = () => {
 	const handleSubmit = (e) => {
 		e.preventDefault()
 		setError('')
-		setSuccess('')
+		setShowSuccessPopup(false)
+		const storedCredentials = getStoredCredentials()
 
 		if (!previousPassword || !newPassword || !confirmPassword) {
 			setError('Please fill out all fields.')
@@ -48,14 +55,35 @@ const ResetPassword = () => {
 			return
 		}
 
-		// Replace this with real API call to update password.
+		if (previousPassword !== storedCredentials.password) {
+			setError('Previous password is incorrect.')
+			return
+		}
+
 		setTimeout(() => {
-			setSuccess('Password has been reset successfully.')
+			saveNewPassword(newPassword)
+			setShowSuccessPopup(true)
 			setPreviousPassword('')
 			setNewPassword('')
 			setConfirmPassword('')
 		}, 600)
 	}
+
+	const handleSkip = () => {
+		markPasswordResetSkipped()
+		navigate('/dashboard')
+	}
+
+	useEffect(() => {
+		if (!showSuccessPopup) return undefined
+
+		const timer = setTimeout(() => {
+			setShowSuccessPopup(false)
+			navigate('/')
+		}, 2000)
+
+		return () => clearTimeout(timer)
+	}, [navigate, showSuccessPopup])
 
 	return (
 		<div className="rp-page">
@@ -128,14 +156,26 @@ const ResetPassword = () => {
 			</label>
 
 			{error && <div className="rp-error">{error}</div>}
-			{success && <div className="rp-success">{success}</div>}
-
-						<button className="rp-button" type="submit">
-							Reset password
-						</button>
+						<div className="rp-actions">
+							<button className="rp-button" type="submit">
+								Reset password
+							</button>
+							{isFromDefaultLogin && (
+								<button type="button" className="rp-skip-button" onClick={handleSkip}>
+									Skip for now
+								</button>
+							)}
+						</div>
 					</form>
 				</div>
 			</main>
+			<ResetSuccessfulScreen
+				open={showSuccessPopup}
+				onClose={() => {
+					setShowSuccessPopup(false)
+					navigate('/')
+				}}
+			/>
 		</div>
 	)
 }
