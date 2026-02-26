@@ -2,24 +2,19 @@ import React, { useState } from 'react'
 import './ForgotPassword.css'
 import forgotImg from '../../../assets/images/forgot.png'
 import otpIcon from '../../../assets/images/otp.png'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 const ForgotPassword = () => {
+  const navigate = useNavigate()
   const [identifier, setIdentifier] = useState('')
   const [error, setError] = useState('')
 
-  // Regex patterns for validation
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   const mobileRegex = /^[0-9]{10}$/
 
   const handleIdentifierChange = (e) => {
     let value = e.target.value
-    
-    // If the input contains only digits, limit to 10 digits
-    if (/^\d*$/.test(value)) {
-      value = value.slice(0, 10)
-    }
-    
+    if (/^\d*$/.test(value)) value = value.slice(0, 10)
     setIdentifier(value)
     setError('')
   }
@@ -31,22 +26,19 @@ const ForgotPassword = () => {
     }
 
     const isEmail = identifier.includes('@')
-
     if (isEmail) {
       if (!emailRegex.test(identifier)) {
         setError('Please enter a valid email address')
         return
       }
+      navigate('/forgot-otp', { state: { email: identifier } })
     } else {
       if (!mobileRegex.test(identifier)) {
         setError('Mobile number must be exactly 10 digits')
         return
       }
+      navigate('/forgot-otp', { state: { mobileNumber: identifier } })
     }
-
-    alert('OTP sent successfully (Dummy)')
-    setIdentifier('')
-    setError('')
   }
 
   return (
