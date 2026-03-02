@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react'
 import './Login.css'
 import kidsImg from '../../assets/images/kids.png'
 import TextField from '@mui/material/TextField'
-import MenuItem from '@mui/material/MenuItem'
 import Checkbox from '@mui/material/Checkbox'
 import FormControlLabel from '@mui/material/FormControlLabel'
 import IconButton from '@mui/material/IconButton'
@@ -12,27 +11,27 @@ import Visibility from '@mui/icons-material/Visibility'
 import VisibilityOff from '@mui/icons-material/VisibilityOff'
 import { Link, useNavigate } from 'react-router-dom'
 import {
+  DEFAULT_PASSWORD,
   DUMMY_RESET_CREDENTIALS,
   getStoredCredentials,
+  isDefaultPasswordRetired,
   setStoredCredentials,
 } from '../../utils/authStorage'
 
 const Login = () => {
   const navigate = useNavigate()
   const [formData, setFormData] = useState({
-    email: '',
+    username: '',
     password: '',
     mobileNumber: '',
     remember: false,
-    role: '',
   })
 
   const [showPassword, setShowPassword] = useState(false)
   const [otpSent, setOtpSent] = useState(false)
   const [otpInput, setOtpInput] = useState('')
   const [otpTimer, setOtpTimer] = useState(0)
-  const [roleError, setRoleError] = useState(false)
-  const [loginMode, setLoginMode] = useState('email')
+  const [loginMode, setLoginMode] = useState('username')
 
   useEffect(() => {
     if (!otpSent || otpTimer <= 0) return undefined
@@ -47,7 +46,6 @@ const Login = () => {
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
     setFormData((p) => ({ ...p, [name]: type === 'checkbox' ? checked : value }))
-    if (name === 'role') setRoleError(false)
   }
 
   const handleMobileChange = (e) => {
@@ -67,35 +65,33 @@ const Login = () => {
       return
     }
 
-    if (loginMode === 'email') {
-      const email = (formData.email || '').trim()
+    if (loginMode === 'username') {
+      const username = (formData.username || '').trim()
       const pwd = formData.password || ''
       const storedCredentials = getStoredCredentials()
+      const defaultPasswordRetired = isDefaultPasswordRetired()
+      const hasStoredUpdatedPassword = storedCredentials.password !== DEFAULT_PASSWORD
 
-      if (!formData.role) {
-        setRoleError(true)
+      if (!username || !pwd) {
+        alert('Please enter username and password')
         return
       }
-      if (!email || !pwd) {
-        alert('Please enter email and password')
-        return
-      }
-      if (!email.includes('@gmail.com')) {
-        alert('Email must be a @gmail.com address')
+      if (defaultPasswordRetired && hasStoredUpdatedPassword && pwd === DEFAULT_PASSWORD) {
+        alert('Invalid credentials')
         return
       }
 
-      if (email === storedCredentials.email && pwd === storedCredentials.password) {
+      if (username === storedCredentials.username && pwd === storedCredentials.password) {
         if (storedCredentials.needsPasswordReset) {
           navigate('/reset-password', { state: { fromDefaultLogin: true } })
           return
         }
         navigate('/dashboard')
-      } else if (DUMMY_RESET_CREDENTIALS.some((cred) => cred.email === email && cred.password === pwd)) {
-        setStoredCredentials({ email, password: pwd, needsPasswordReset: true })
+      } else if (DUMMY_RESET_CREDENTIALS.some((cred) => cred.username === username && cred.password === pwd)) {
+        setStoredCredentials({ username, password: pwd, needsPasswordReset: true })
         navigate('/reset-password', { state: { fromDefaultLogin: true } })
       } else {
-        alert('Invalid Credentials')
+        alert('Invalid credentials')
       }
       return
     }
@@ -121,7 +117,7 @@ const Login = () => {
     if (mobile === '9390417936' && otpInput === '6744') {
       navigate('/dashboard')
     } else {
-      alert('Invalid Credentials')
+      alert('Invalid credentials')
     }
   }
 
@@ -173,17 +169,17 @@ const Login = () => {
                     className="form-check-input"
                     type="radio"
                     name="loginMode"
-                    id="modeEmail"
-                    value="email"
-                    checked={loginMode === 'email'}
+                    id="modeUsername"
+                    value="username"
+                    checked={loginMode === 'username'}
                     onChange={() => {
-                      setLoginMode('email')
+                      setLoginMode('username')
                       setOtpSent(false)
                       setOtpInput('')
                       setOtpTimer(0)
                     }}
                   />
-                  <label className="form-check-label" htmlFor="modeEmail">Login with Email</label>
+                  <label className="form-check-label" htmlFor="modeUsername">Login with Username</label>
                 </div>
                 <div className="form-check">
                   <input
@@ -204,38 +200,14 @@ const Login = () => {
                 </div>
               </div>
 
-              {loginMode === 'email' && (
+              {loginMode === 'username' && (
                 <>
-                  <div className="mt-2">
-                    <label className="input-label">Role</label>
-                    <TextField
-                      select
-                      name="role"
-                      variant="outlined"
-                      value={formData.role}
-                      onChange={handleChange}
-                      fullWidth
-                      size="small"
-                      displayEmpty
-                      error={roleError}
-                      helperText={roleError ? 'Please select a role' : ''}
-                      SelectProps={{
-                        renderValue: (selected) => (!selected ? 'Select Role' : selected),
-                      }}
-                    >
-                      <MenuItem value="">Select Role</MenuItem>
-                      <MenuItem value="Admin">Admin</MenuItem>
-                      <MenuItem value="Teacher">Teacher</MenuItem>
-                      <MenuItem value="Parent">Parent</MenuItem>
-                      <MenuItem value="FrontOffice">FrontOffice</MenuItem>
-                    </TextField>
-                  </div>
-                  <label className="input-label">Email address</label>
+                  <label className="input-label">Username</label>
                   <TextField
-                    name="email"
+                    name="username"
                     variant="outlined"
-                    placeholder="Enter Your ID"
-                    value={formData.email}
+                    placeholder="Enter Username"
+                    value={formData.username}
                     onChange={handleChange}
                     fullWidth
                     size="small"

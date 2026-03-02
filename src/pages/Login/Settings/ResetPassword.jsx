@@ -2,14 +2,12 @@ import React, { useEffect, useState } from 'react'
 import './ResetPassword.css'
 import Visibility from '@mui/icons-material/Visibility'
 import VisibilityOff from '@mui/icons-material/VisibilityOff'
-import { getStoredCredentials, markPasswordResetSkipped, saveNewPassword } from '../../../utils/authStorage'
+import { getStoredCredentials, saveNewPassword } from '../../../utils/authStorage'
 import ResetSuccessfulScreen from './ResetSuccessfulScreen'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 
 const ResetPassword = () => {
   const navigate = useNavigate()
-  const location = useLocation()
-  const isFromDefaultLogin = Boolean(location.state?.fromDefaultLogin)
   const [previousPassword, setPreviousPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -54,7 +52,6 @@ const ResetPassword = () => {
   }
 
   const handleSkip = () => {
-    markPasswordResetSkipped()
     navigate('/dashboard')
   }
 
@@ -137,9 +134,7 @@ const ResetPassword = () => {
             {error && <div className="rp-error">{error}</div>}
             <div className="rp-actions">
               <button className="rp-button" type="submit">Reset password</button>
-              {isFromDefaultLogin && (
-                <button type="button" className="rp-skip-button" onClick={handleSkip}>Skip for now</button>
-              )}
+              <button type="button" className="rp-skip-button" onClick={handleSkip}>Skip for now</button>
             </div>
           </form>
         </div>
