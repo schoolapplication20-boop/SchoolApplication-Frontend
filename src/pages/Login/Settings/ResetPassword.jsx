@@ -51,9 +51,11 @@ const ResetPassword = () => {
     }, 600)
   }
 
+
   const handleSkip = () => {
     navigate('/dashboard')
   }
+
 
   useEffect(() => {
     if (!showSuccessPopup) return undefined

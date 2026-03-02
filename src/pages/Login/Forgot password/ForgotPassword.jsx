@@ -32,7 +32,12 @@ const ForgotPassword = () => {
         return
       }
       navigate('/forgot-otp', { state: { email: identifier } })
-      return
+    } else {
+      if (!mobileRegex.test(identifier)) {
+        setError('Mobile number must be exactly 10 digits')
+        return
+      }
+      navigate('/forgot-otp', { state: { mobileNumber: identifier } })
     }
 
     if (!mobileRegex.test(identifier)) {

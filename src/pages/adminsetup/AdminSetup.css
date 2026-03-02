@@ -1,0 +1,276 @@
+.admin-setup-page {
+  min-height: 100vh;
+  background: #f2f2f2;
+  padding: 0;
+  font-family: 'Poppins', sans-serif;
+  color: #252525;
+}
+
+.admin-setup-shell {
+  width: 100%;
+  max-width: none;
+  margin: 0 auto;
+  padding: 0 14px 14px;
+  --label-col-width: 190px;
+  --field-gap: 12px;
+}
+
+.setup-header {
+  background: #9fd647;
+  border-radius: 0 0 14px 14px;
+  padding: 16px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.setup-header h1 {
+  font-size: 30px;
+  font-weight: 700;
+  margin: 0;
+  color: #ffffff;
+}
+
+.setup-header p {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: #f7ffe9;
+}
+
+.save-btn {
+  border: 0;
+  border-radius: 8px;
+  width: 120px;
+  height: 48px;
+  font-size: 26px;
+  font-weight: 600;
+  color: #9fd647;
+  background: #f5f5f5;
+  cursor: pointer;
+}
+
+.setup-card {
+  margin-top: 14px;
+  background: #ececec;
+  border-radius: 8px;
+  padding: 14px 14px 12px;
+}
+
+.setup-card h2 {
+  font-size: 24px;
+  margin: 0 0 12px;
+  font-weight: 700;
+}
+
+.school-grid {
+  display: grid;
+  grid-template-columns: 1fr 235px;
+  gap: 22px;
+}
+
+.left-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--field-gap);
+}
+
+.logo-box {
+  border: 2px dashed #b6b6b6;
+  border-radius: 8px;
+  padding: 12px;
+  text-align: center;
+}
+
+.logo-box h3 {
+  margin: 0 0 8px;
+  font-size: 22px;
+}
+
+.logo-preview {
+  width: 100%;
+  height: 88px;
+  border-radius: 8px;
+  background: #d3d3d3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.logo-preview span {
+  font-size: 34px;
+}
+
+.logo-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.upload-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 10px;
+  background: #9fd647;
+  color: #ffffff;
+  border-radius: 10px;
+  padding: 8px 28px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.fields-grid {
+  display: grid;
+  gap: var(--field-gap);
+  
+}
+
+.fields-grid.one-col {
+  grid-template-columns: 1fr;
+}
+
+.fields-grid.two-col {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.fields-grid.three-col {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-bottom: var(--field-gap);
+}
+
+.admin-setup-page label {
+  display: grid;
+  grid-template-columns: var(--label-col-width) minmax(0, 1fr);
+  align-items: center;
+  column-gap: 12px;
+  row-gap: 6px;
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.admin-setup-page input,
+.admin-setup-page select,
+.admin-setup-page textarea {
+  width: 100%;
+  box-sizing: border-box;
+  height: 34px;
+  border: 1px solid #cfcfcf;
+  border-radius: 2px;
+  padding: 6px 10px;
+  font-size: 13px;
+  font-family: inherit;
+  background: #f7f7f7;
+}
+
+.admin-setup-page textarea {
+  min-height: 72px;
+  resize: vertical;
+}
+
+.bottom-grid {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.setup-card.compact h2 {
+  margin-bottom: 10px;
+}
+
+.roles-wrap {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.roles-wrap label {
+  display: inline-flex;
+  grid-template-columns: none;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+}
+
+.admin-setup-page .roles-wrap input[type='checkbox'] {
+  width: 14px;
+  height: 14px;
+}
+
+.setup-error {
+  margin-top: 12px;
+  color: #b42318;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+@media (max-width: 1024px) {
+  .admin-setup-shell {
+    --label-col-width: 170px;
+  }
+
+  .school-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .bottom-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .setup-header h1 {
+    font-size: 24px;
+  }
+
+  .save-btn {
+    width: 96px;
+    height: 40px;
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 720px) {
+  .admin-setup-shell {
+    padding: 0 8px 10px;
+    --label-col-width: 1fr;
+  }
+
+  .setup-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .save-btn {
+    width: 100%;
+    font-size: 18px;
+  }
+
+  .setup-card {
+    padding: 10px;
+  }
+
+  .setup-card h2 {
+    font-size: 18px;
+  }
+
+  .fields-grid.two-col,
+  .fields-grid.three-col {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-setup-page label {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .roles-wrap {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+}

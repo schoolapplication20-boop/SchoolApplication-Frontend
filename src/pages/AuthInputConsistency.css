@@ -1,0 +1,84 @@
+/* Shared input sizing for auth screens */
+:root {
+  --auth-input-height: 48px;
+  --auth-input-radius: 10px;
+  --auth-input-font-size: 14px;
+  --auth-input-border: #e0e0e0;
+  --auth-input-focus-border: #7cb342;
+  --auth-input-focus-ring: 0 0 0 4px rgba(124, 179, 66, 0.1);
+}
+
+.forgot-page .form-control.form-control-lg,
+.change-password-page .form-control,
+.login-form .MuiOutlinedInput-root,
+.forgot-otp-page .otp-input {
+  height: var(--auth-input-height);
+  min-height: var(--auth-input-height);
+  border-radius: var(--auth-input-radius);
+}
+
+.forgot-page .form-control.form-control-lg,
+.change-password-page .form-control {
+  font-size: var(--auth-input-font-size);
+  padding: 10px 14px;
+}
+
+.change-password-page .password-toggle-btn {
+  height: var(--auth-input-height);
+  min-height: var(--auth-input-height);
+}
+
+.login-form .MuiInputBase-input {
+  font-size: var(--auth-input-font-size);
+}
+
+.login-form .MuiOutlinedInput-input {
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+.forgot-otp-page .otp-input {
+  width: var(--auth-input-height);
+  font-size: 20px;
+}
+
+/* Keep password input design consistent between Login (MUI) and Change Password (Bootstrap) */
+.login-form .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline {
+  border: 2px solid var(--auth-input-border);
+  border-radius: var(--auth-input-radius);
+}
+
+.login-form .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: var(--auth-input-focus-border);
+}
+
+.login-form .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: var(--auth-input-focus-border);
+}
+
+.login-form .MuiOutlinedInput-root.Mui-focused {
+  box-shadow: var(--auth-input-focus-ring);
+}
+
+.change-password-page .input-group .form-control,
+.change-password-page .input-group .btn-outline-secondary {
+  border: 2px solid var(--auth-input-border);
+  background-color: #fff;
+}
+
+.change-password-page .input-group:focus-within {
+  border-radius: var(--auth-input-radius);
+  box-shadow: var(--auth-input-focus-ring);
+}
+
+.change-password-page .input-group:focus-within .form-control,
+.change-password-page .input-group:focus-within .btn-outline-secondary {
+  border-color: var(--auth-input-focus-border);
+}
+
+.change-password-page .password-toggle-btn,
+.login-form .MuiInputAdornment-root .MuiIconButton-root {
+  width: var(--auth-input-height);
+  min-width: var(--auth-input-height);
+  height: var(--auth-input-height);
+}

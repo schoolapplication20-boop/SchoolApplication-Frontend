@@ -77,6 +77,7 @@ export const saveNewPassword = (newPassword) => {
     localStorage.setItem(DEFAULT_PASSWORD_RETIRED_KEY, 'true')
   }
   localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(updated))
+  localStorage.setItem(`schoolers_password_${updated.username}`, newPassword)
   return updated
 }
 

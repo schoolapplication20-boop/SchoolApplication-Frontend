@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import './Login.css'
 import kidsImg from '../../assets/images/kids.png'
 import TextField from '@mui/material/TextField'
+import MenuItem from '@mui/material/MenuItem'
 import Checkbox from '@mui/material/Checkbox'
 import FormControlLabel from '@mui/material/FormControlLabel'
 import IconButton from '@mui/material/IconButton'
@@ -17,40 +18,60 @@ import {
   isDefaultPasswordRetired,
   setStoredCredentials,
 } from '../../utils/authStorage'
+import { getPostLoginRoute } from '../../utils/adminSetupStorage'
 
 const Login = () => {
+  const OTP_VALIDITY_SECONDS = 45
   const navigate = useNavigate()
+
   const [formData, setFormData] = useState({
     username: '',
     password: '',
     mobileNumber: '',
+    role: '',
     remember: false,
   })
 
   const [showPassword, setShowPassword] = useState(false)
   const [otpSent, setOtpSent] = useState(false)
   const [otpInput, setOtpInput] = useState('')
-  const [otpTimer, setOtpTimer] = useState(0)
+  const [otpSecondsLeft, setOtpSecondsLeft] = useState(0)
+  const [roleError, setRoleError] = useState(false)
   const [loginMode, setLoginMode] = useState('username')
 
+  const isOtpExpired = otpSent && otpSecondsLeft === 0
+
   useEffect(() => {
-    if (!otpSent || otpTimer <= 0) return undefined
+    if (!otpSent || otpSecondsLeft <= 0) return
 
     const intervalId = setInterval(() => {
-      setOtpTimer((prev) => (prev > 0 ? prev - 1 : 0))
+      setOtpSecondsLeft((prev) => (prev > 0 ? prev - 1 : 0))
     }, 1000)
 
     return () => clearInterval(intervalId)
-  }, [otpSent, otpTimer])
+  }, [otpSent, otpSecondsLeft])
+
+  const formatOtpTime = (seconds) => {
+    const mm = String(Math.floor(seconds / 60)).padStart(2, '0')
+    const ss = String(seconds % 60).padStart(2, '0')
+    return `${mm}:${ss}`
+  }
+
+  const resetOtpState = () => {
+    setOtpSent(false)
+    setOtpInput('')
+    setOtpSecondsLeft(0)
+  }
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
-    setFormData((p) => ({ ...p, [name]: type === 'checkbox' ? checked : value }))
+    setFormData((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }))
+    if (name === 'role') setRoleError(false)
   }
 
   const handleMobileChange = (e) => {
     const digits = (e.target.value || '').replace(/\D/g, '').slice(0, 10)
-    setFormData((p) => ({ ...p, mobileNumber: digits }))
+    setFormData((prev) => ({ ...prev, mobileNumber: digits }))
   }
 
   const handleOtpInputChange = (e) => {
@@ -60,38 +81,63 @@ const Login = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault()
+
     if (!formData.remember) {
       alert('You must agree to the Terms & Privacy to continue')
       return
     }
 
     if (loginMode === 'username') {
-      const username = (formData.username || '').trim()
+      const username = (formData.username || '').trim().toLowerCase()
       const pwd = formData.password || ''
       const storedCredentials = getStoredCredentials()
-      const defaultPasswordRetired = isDefaultPasswordRetired()
+      const savedPassword = localStorage.getItem(`schoolers_password_${username}`)
+
+      if (!formData.role) {
+        setRoleError(true)
+        return
+      }
 
       if (!username || !pwd) {
         alert('Please enter username and password')
         return
       }
-      if (defaultPasswordRetired && pwd === DEFAULT_PASSWORD) {
-        alert('Invalid credentials')
+
+      if (savedPassword !== null) {
+        if (pwd !== savedPassword) {
+          alert('Invalid Credentials')
+          return
+        }
+
+        if (storedCredentials.username === username && storedCredentials.needsPasswordReset) {
+          navigate('/reset-password', { state: { fromDefaultLogin: true } })
+        } else {
+          navigate(getPostLoginRoute())
+        }
+        return
+      }
+
+      if (isDefaultPasswordRetired() && pwd === DEFAULT_PASSWORD) {
+        alert('Invalid Credentials')
         return
       }
 
       if (username === storedCredentials.username && pwd === storedCredentials.password) {
         if (storedCredentials.needsPasswordReset) {
           navigate('/reset-password', { state: { fromDefaultLogin: true } })
-          return
+        } else {
+          navigate(getPostLoginRoute())
         }
-        navigate('/dashboard')
-      } else if (DUMMY_RESET_CREDENTIALS.some((cred) => cred.username === username && cred.password === pwd)) {
+        return
+      }
+
+      if (DUMMY_RESET_CREDENTIALS.some((cred) => cred.username === username && cred.password === pwd)) {
         setStoredCredentials({ username, password: pwd, needsPasswordReset: true })
         navigate('/reset-password', { state: { fromDefaultLogin: true } })
-      } else {
-        alert('Invalid credentials')
+        return
       }
+
+      alert('Invalid Credentials')
       return
     }
 
@@ -108,29 +154,34 @@ const Login = () => {
       alert('Enter the 4-digit OTP')
       return
     }
-    if (otpTimer === 0) {
+    if (isOtpExpired) {
       alert('OTP expired. Please click Send OTP again.')
       return
     }
 
     if (mobile === '9390417936' && otpInput === '6744') {
-      navigate('/dashboard')
+      navigate(getPostLoginRoute())
     } else {
       alert('Invalid credentials')
     }
   }
 
   const handleSendOTP = () => {
+    if (otpSent && !isOtpExpired) {
+      alert(`Please wait ${formatOtpTime(otpSecondsLeft)} before requesting a new OTP`)
+      return
+    }
+
     const mobile = (formData.mobileNumber || '').replace(/\D/g, '')
     if (!/^[0-9]{10}$/.test(mobile)) {
       alert('Enter a valid 10-digit mobile number before requesting OTP')
       return
     }
-    const otp = '6744'
+
     setOtpSent(true)
     setOtpInput('')
-    setOtpTimer(10)
-    alert(`OTP (for testing): ${otp}`)
+    setOtpSecondsLeft(OTP_VALIDITY_SECONDS)
+    alert('OTP (for testing): 6744')
   }
 
   return (
@@ -173,9 +224,7 @@ const Login = () => {
                     checked={loginMode === 'username'}
                     onChange={() => {
                       setLoginMode('username')
-                      setOtpSent(false)
-                      setOtpInput('')
-                      setOtpTimer(0)
+                      resetOtpState()
                     }}
                   />
                   <label className="form-check-label" htmlFor="modeUsername">Login with Username</label>
@@ -190,9 +239,7 @@ const Login = () => {
                     checked={loginMode === 'mobile'}
                     onChange={() => {
                       setLoginMode('mobile')
-                      setOtpSent(false)
-                      setOtpInput('')
-                      setOtpTimer(0)
+                      resetOtpState()
                     }}
                   />
                   <label className="form-check-label" htmlFor="modeMobile">Login with Mobile</label>
@@ -201,6 +248,31 @@ const Login = () => {
 
               {loginMode === 'username' && (
                 <>
+                  <div className="mt-2">
+                    <label className="input-label">Role</label>
+                    <TextField
+                      select
+                      name="role"
+                      variant="outlined"
+                      value={formData.role}
+                      onChange={handleChange}
+                      fullWidth
+                      size="small"
+                      displayEmpty
+                      error={roleError}
+                      helperText={roleError ? 'Please select a role' : ''}
+                      SelectProps={{
+                        renderValue: (selected) => (!selected ? 'Select Role' : selected),
+                      }}
+                    >
+                      <MenuItem value="">Select Role</MenuItem>
+                      <MenuItem value="Admin">Admin</MenuItem>
+                      <MenuItem value="Teacher">Teacher</MenuItem>
+                      <MenuItem value="Parent">Parent</MenuItem>
+                      <MenuItem value="FrontOffice">FrontOffice</MenuItem>
+                    </TextField>
+                  </div>
+
                   <label className="input-label">Username</label>
                   <TextField
                     name="username"
@@ -259,8 +331,13 @@ const Login = () => {
                       size="small"
                       inputProps={{ inputMode: 'numeric', pattern: '[0-9]*', maxLength: 10 }}
                     />
-                    <Button variant="outlined" onClick={handleSendOTP} className="send-otp-btn">
-                      Send OTP
+                    <Button
+                      variant="outlined"
+                      onClick={handleSendOTP}
+                      className="send-otp-btn"
+                      disabled={otpSent && !isOtpExpired}
+                    >
+                      {otpSent && !isOtpExpired ? `Resend in ${formatOtpTime(otpSecondsLeft)}` : 'Send OTP'}
                     </Button>
                   </div>
 
@@ -277,7 +354,9 @@ const Login = () => {
                         size="small"
                         inputProps={{ inputMode: 'numeric', pattern: '[0-9]*', maxLength: 4 }}
                       />
-                      <div className="small text-muted mt-1">OTP expires in: {otpTimer}s</div>
+                      <small className="otp-timer-text d-block mt-1">
+                        {isOtpExpired ? 'OTP expired. Click Send OTP to get a new code.' : `OTP expires in ${formatOtpTime(otpSecondsLeft)}`}
+                      </small>
                     </div>
                   )}
                 </>

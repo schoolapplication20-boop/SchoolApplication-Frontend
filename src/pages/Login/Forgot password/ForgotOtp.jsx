@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react'
 import './ForgotOtp.css'
-import { useNavigate, useLocation, Link } from 'react-router-dom'
+import { useLocation, useNavigate, Link } from 'react-router-dom'
 import forgotImg from '../../../assets/images/forgot.png'
 
 const ForgotOtp = () => {
+  const OTP_VALIDITY_SECONDS = 45
   const navigate = useNavigate()
   const location = useLocation()
   const mobileNumber = location.state?.mobileNumber || ''
@@ -12,19 +13,27 @@ const ForgotOtp = () => {
 
   const [otp, setOtp] = useState(['', '', '', ''])
   const [error, setError] = useState('')
-  const [otpTimer, setOtpTimer] = useState(5)
+  const [otpSecondsLeft, setOtpSecondsLeft] = useState(OTP_VALIDITY_SECONDS)
   const otpRefs = [useRef(), useRef(), useRef(), useRef()]
 
   const DUMMY_OTP = '1234'
-  const isOtpExpired = otpTimer === 0
+  const isOtpExpired = otpSecondsLeft === 0
 
   useEffect(() => {
-    if (otpTimer <= 0) return undefined
+    if (otpSecondsLeft <= 0) return undefined
+
     const intervalId = setInterval(() => {
-      setOtpTimer((prev) => (prev > 0 ? prev - 1 : 0))
+      setOtpSecondsLeft((prev) => (prev > 0 ? prev - 1 : 0))
     }, 1000)
+
     return () => clearInterval(intervalId)
-  }, [otpTimer])
+  }, [otpSecondsLeft])
+
+  const formatOtpTime = (seconds) => {
+    const mm = String(Math.floor(seconds / 60)).padStart(2, '0')
+    const ss = String(seconds % 60).padStart(2, '0')
+    return `${mm}:${ss}`
+  }
 
   const handleOtpChange = (index, value) => {
     if (!/^\d*$/.test(value)) return
@@ -36,14 +45,17 @@ const ForgotOtp = () => {
   }
 
   const handleKeyDown = (index, e) => {
-    if (e.key === 'Backspace' && !otp[index] && index > 0) otpRefs[index - 1].current.focus()
+    if (e.key === 'Backspace' && !otp[index] && index > 0) {
+      otpRefs[index - 1].current.focus()
+    }
   }
 
   const handleResendOtp = () => {
     if (!isOtpExpired) return
+
     setOtp(['', '', '', ''])
     setError('')
-    setOtpTimer(5)
+    setOtpSecondsLeft(OTP_VALIDITY_SECONDS)
     otpRefs[0].current.focus()
     alert(`New OTP sent successfully (Dummy OTP: ${DUMMY_OTP})`)
   }
@@ -60,9 +72,14 @@ const ForgotOtp = () => {
       return
     }
 
+    if (isOtpExpired) {
+      setError('OTP expired. Please resend OTP.')
+      return
+    }
+
     if (enteredOtp === DUMMY_OTP) {
       alert('OTP Verified Successfully')
-      navigate('/dashboard')
+      navigate('/change-password', { state: { mobileNumber, email, identifier } })
     } else {
       setError('Invalid OTP. Please try again.')
       setOtp(['', '', '', ''])
@@ -123,7 +140,9 @@ const ForgotOtp = () => {
             {error && <div className="alert alert-danger text-center mb-3">{error}</div>}
 
             <div className="text-center mb-4">
-              <p className="text-muted small mb-2">OTP expires in: {otpTimer}s</p>
+              <small className="otp-expiry-text d-block mb-2">
+                {isOtpExpired ? 'OTP expired. You can resend now.' : `OTP expires in ${formatOtpTime(otpSecondsLeft)}`}
+              </small>
               <button className="btn btn-link p-0 resend-otp-btn" onClick={handleResendOtp} disabled={!isOtpExpired}>
                 Resend OTP
               </button>
