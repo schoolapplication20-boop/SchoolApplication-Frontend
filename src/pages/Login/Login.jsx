@@ -16,6 +16,7 @@ import {
   getStoredCredentials,
   setStoredCredentials,
 } from '../../utils/authStorage'
+import { getPostLoginRoute } from '../../utils/adminSetupStorage'
 
 const Login = () => {
   const OTP_VALIDITY_SECONDS = 45
@@ -106,7 +107,14 @@ const Login = () => {
 
       if (savedPassword !== null) {
         if (pwd === savedPassword) {
-          navigate('/dashboard')
+          const requiresFirstReset = storedCredentials.needsPasswordReset || storedCredentials.email !== email
+
+          if (requiresFirstReset) {
+            setStoredCredentials({ email, password: pwd, needsPasswordReset: true })
+            navigate('/reset-password', { state: { fromDefaultLogin: true } })
+          } else {
+            navigate(getPostLoginRoute())
+          }
         } else {
           alert('Invalid Credentials')
         }
@@ -117,12 +125,17 @@ const Login = () => {
         if (storedCredentials.needsPasswordReset) {
           navigate('/reset-password', { state: { fromDefaultLogin: true } })
         } else {
-          navigate('/dashboard')
+          navigate(getPostLoginRoute())
         }
         return
       }
 
       if (DUMMY_RESET_CREDENTIALS.some((cred) => cred.email === email && cred.password === pwd)) {
+        if (storedCredentials.email === email && !storedCredentials.needsPasswordReset) {
+          alert('Invalid Credentials')
+          return
+        }
+
         setStoredCredentials({ email, password: pwd, needsPasswordReset: true })
         navigate('/reset-password', { state: { fromDefaultLogin: true } })
         return
@@ -151,7 +164,7 @@ const Login = () => {
     }
 
     if (mobile === '9390417936' && otpInput === '6744') {
-      navigate('/dashboard')
+      navigate(getPostLoginRoute())
     } else {
       alert('Invalid Credentials')
     }

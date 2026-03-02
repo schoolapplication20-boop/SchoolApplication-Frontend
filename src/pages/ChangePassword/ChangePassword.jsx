@@ -4,6 +4,7 @@ import { useNavigate, Link, useLocation } from 'react-router-dom'
 import changePasswordImg from '../../assets/images/forgot.png'
 import Visibility from '@mui/icons-material/Visibility'
 import VisibilityOff from '@mui/icons-material/VisibilityOff'
+import { getStoredCredentials } from '../../utils/authStorage'
 
 const ChangePassword = () => {
   const navigate = useNavigate()
@@ -47,9 +48,20 @@ const ChangePassword = () => {
 
     const email = (location.state?.email || '').trim().toLowerCase()
     const identifier = (location.state?.identifier || '').trim().toLowerCase()
+    const storedCredentials = getStoredCredentials()
 
     // Keep reset password aligned with email login key used in Login.jsx.
-    const loginAccountKey = email || 'admin@gmail.com'
+    const loginAccountKey = email || identifier || 'admin@gmail.com'
+    const accountPasswordFromLocalStorage = localStorage.getItem(`schoolers_password_${loginAccountKey}`)
+    const accountPasswordFromAuthStorage =
+      email && storedCredentials.email?.toLowerCase() === email ? storedCredentials.password : null
+    const oldPassword = accountPasswordFromLocalStorage || accountPasswordFromAuthStorage
+
+    if (oldPassword && formData.password === oldPassword) {
+      setError('New password cannot be the same as your old login password')
+      return
+    }
+
     localStorage.setItem(`schoolers_password_${loginAccountKey}`, formData.password)
 
     // Also update identifier key when present to avoid breaking existing local demo data.

@@ -69,6 +69,7 @@ export const saveNewPassword = (newPassword) => {
     needsPasswordReset: false,
   }
   localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(updated))
+  localStorage.setItem(`schoolers_password_${updated.email}`, newPassword)
   return updated
 }
 
