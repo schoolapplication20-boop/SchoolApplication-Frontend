@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import './Login.css'
 import kidsImg from '../../assets/images/kids.png'
 import TextField from '@mui/material/TextField'
+import MenuItem from '@mui/material/MenuItem'
 import Checkbox from '@mui/material/Checkbox'
 import FormControlLabel from '@mui/material/FormControlLabel'
 import IconButton from '@mui/material/IconButton'
@@ -11,10 +12,15 @@ import Visibility from '@mui/icons-material/Visibility'
 import VisibilityOff from '@mui/icons-material/VisibilityOff'
 import { Link, useNavigate } from 'react-router-dom'
 import {
+<<<<<<< HEAD
   DEFAULT_PASSWORD,
   DUMMY_RESET_CREDENTIALS,
   getStoredCredentials,
   isDefaultPasswordRetired,
+=======
+  DUMMY_RESET_CREDENTIALS,
+  getStoredCredentials,
+>>>>>>> login-page
   setStoredCredentials,
 } from '../../utils/authStorage'
 
@@ -25,13 +31,29 @@ const Login = () => {
     password: '',
     mobileNumber: '',
     remember: false,
+    role: '',
   })
 
   const [showPassword, setShowPassword] = useState(false)
   const [otpSent, setOtpSent] = useState(false)
   const [otpInput, setOtpInput] = useState('')
   const [otpTimer, setOtpTimer] = useState(0)
+<<<<<<< HEAD
   const [loginMode, setLoginMode] = useState('username')
+
+  useEffect(() => {
+    if (!otpSent || otpTimer <= 0) return undefined
+
+    const intervalId = setInterval(() => {
+      setOtpTimer((prev) => (prev > 0 ? prev - 1 : 0))
+    }, 1000)
+
+    return () => clearInterval(intervalId)
+  }, [otpSent, otpTimer])
+=======
+  const [roleError, setRoleError] = useState(false)
+  const [loginMode, setLoginMode] = useState('email') // 'email' or 'mobile'
+>>>>>>> login-page
 
   useEffect(() => {
     if (!otpSent || otpTimer <= 0) return undefined
@@ -46,6 +68,7 @@ const Login = () => {
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
     setFormData((p) => ({ ...p, [name]: type === 'checkbox' ? checked : value }))
+    if (name === 'role') setRoleError(false)
   }
 
   const handleMobileChange = (e) => {
@@ -69,26 +92,45 @@ const Login = () => {
       const username = (formData.username || '').trim()
       const pwd = formData.password || ''
       const storedCredentials = getStoredCredentials()
+<<<<<<< HEAD
       const defaultPasswordRetired = isDefaultPasswordRetired()
       const hasStoredUpdatedPassword = storedCredentials.password !== DEFAULT_PASSWORD
 
       if (!username || !pwd) {
         alert('Please enter username and password')
+=======
+        if (!formData.role) {
+          setRoleError(true)
+          return
+        }
+      if (!email || !pwd) {
+        alert('Please enter email and password')
+>>>>>>> login-page
         return
       }
       if (defaultPasswordRetired && hasStoredUpdatedPassword && pwd === DEFAULT_PASSWORD) {
         alert('Invalid credentials')
         return
       }
+<<<<<<< HEAD
 
       if (username === storedCredentials.username && pwd === storedCredentials.password) {
+=======
+      if (email === storedCredentials.email && pwd === storedCredentials.password) {
+        console.log('Submitting credentials', { email, password: pwd, role: formData.role })
+>>>>>>> login-page
         if (storedCredentials.needsPasswordReset) {
           navigate('/reset-password', { state: { fromDefaultLogin: true } })
           return
         }
         navigate('/dashboard')
+<<<<<<< HEAD
       } else if (DUMMY_RESET_CREDENTIALS.some((cred) => cred.username === username && cred.password === pwd)) {
         setStoredCredentials({ username, password: pwd, needsPasswordReset: true })
+=======
+      } else if (DUMMY_RESET_CREDENTIALS.some((cred) => cred.email === email && cred.password === pwd)) {
+        setStoredCredentials({ email, password: pwd, needsPasswordReset: true })
+>>>>>>> login-page
         navigate('/reset-password', { state: { fromDefaultLogin: true } })
       } else {
         alert('Invalid credentials')
@@ -113,7 +155,11 @@ const Login = () => {
       alert('OTP expired. Please click Send OTP again.')
       return
     }
+<<<<<<< HEAD
 
+=======
+    // Dummy mobile credentials: mobile 9876543210 and OTP 6744
+>>>>>>> login-page
     if (mobile === '9390417936' && otpInput === '6744') {
       navigate('/dashboard')
     } else {
@@ -131,6 +177,10 @@ const Login = () => {
     setOtpSent(true)
     setOtpInput('')
     setOtpTimer(10)
+<<<<<<< HEAD
+=======
+    // since no SMS backend, show OTP in alert (for testing)
+>>>>>>> login-page
     alert(`OTP (for testing): ${otp}`)
   }
 
@@ -165,6 +215,7 @@ const Login = () => {
             <form onSubmit={handleSubmit} className="login-form">
               <div className="d-flex gap-3 mb-3">
                 <div className="form-check">
+<<<<<<< HEAD
                   <input
                     className="form-check-input"
                     type="radio"
@@ -196,13 +247,51 @@ const Login = () => {
                       setOtpTimer(0)
                     }}
                   />
+=======
+                  <input className="form-check-input" type="radio" name="loginMode" id="modeEmail" value="email" checked={loginMode === 'email'} onChange={() => { setLoginMode('email'); setOtpSent(false); setOtpInput(''); setOtpTimer(0); }} />
+                  <label className="form-check-label" htmlFor="modeEmail">Login with Email</label>
+                </div>
+                <div className="form-check">
+                  <input className="form-check-input" type="radio" name="loginMode" id="modeMobile" value="mobile" checked={loginMode === 'mobile'} onChange={() => { setLoginMode('mobile'); setOtpSent(false); setOtpInput(''); setOtpTimer(0); }} />
+>>>>>>> login-page
                   <label className="form-check-label" htmlFor="modeMobile">Login with Mobile</label>
                 </div>
               </div>
 
               {loginMode === 'username' && (
                 <>
+<<<<<<< HEAD
                   <label className="input-label">Username</label>
+=======
+                  <div className="mt-2">
+                    <label className="input-label">Role</label>
+                    <TextField
+                      select
+                      name="role"
+                      variant="outlined"
+                      value={formData.role}
+                      onChange={handleChange}
+                      fullWidth
+                      size="small"
+                      displayEmpty
+                      error={roleError}
+                      helperText={roleError ? 'Please select a role' : ''}
+                      SelectProps={{
+                        renderValue: (selected) => {
+                          if (!selected) return 'Select Role'
+                          return selected
+                        },
+                      }}
+                    >
+                      <MenuItem value="">Select Role</MenuItem>
+                      <MenuItem value="Admin">Admin</MenuItem>
+                      <MenuItem value="Teacher">Teacher</MenuItem>
+                      <MenuItem value="Parent">Parent</MenuItem>
+                      <MenuItem value="FrontOffice">FrontOffice</MenuItem>
+                    </TextField>
+                  </div>
+                  <label className="input-label">Email address</label>
+>>>>>>> login-page
                   <TextField
                     name="username"
                     variant="outlined"
@@ -278,9 +367,17 @@ const Login = () => {
                         size="small"
                         inputProps={{ inputMode: 'numeric', pattern: '[0-9]*', maxLength: 4 }}
                       />
+<<<<<<< HEAD
                       <div className="small text-muted mt-1">OTP expires in: {otpTimer}s</div>
+=======
+                      <div className="small text-muted mt-1">
+                        OTP expires in: {otpTimer}s
+                      </div>
+>>>>>>> login-page
                     </div>
                   )}
+
+                  
                 </>
               )}
 

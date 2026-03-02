@@ -31,12 +31,20 @@ const ForgotPassword = () => {
         setError('Please enter a valid email address')
         return
       }
+<<<<<<< HEAD
+=======
+      // Navigate to OTP verification page with email
+>>>>>>> login-page
       navigate('/forgot-otp', { state: { email: identifier } })
     } else {
       if (!mobileRegex.test(identifier)) {
         setError('Mobile number must be exactly 10 digits')
         return
       }
+<<<<<<< HEAD
+=======
+      // Navigate to OTP verification page with mobile number
+>>>>>>> login-page
       navigate('/forgot-otp', { state: { mobileNumber: identifier } })
     }
   }
