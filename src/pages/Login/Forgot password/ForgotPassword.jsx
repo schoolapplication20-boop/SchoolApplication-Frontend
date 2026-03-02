@@ -9,18 +9,12 @@ const ForgotPassword = () => {
   const [identifier, setIdentifier] = useState('')
   const [error, setError] = useState('')
 
-  // Regex patterns for validation
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   const mobileRegex = /^[0-9]{10}$/
 
   const handleIdentifierChange = (e) => {
     let value = e.target.value
-    
-    // If the input contains only digits, limit to 10 digits
-    if (/^\d*$/.test(value)) {
-      value = value.slice(0, 10)
-    }
-    
+    if (/^\d*$/.test(value)) value = value.slice(0, 10)
     setIdentifier(value)
     setError('')
   }
@@ -32,20 +26,17 @@ const ForgotPassword = () => {
     }
 
     const isEmail = identifier.includes('@')
-
     if (isEmail) {
       if (!emailRegex.test(identifier)) {
         setError('Please enter a valid email address')
         return
       }
-      // Navigate to OTP verification page with email
       navigate('/forgot-otp', { state: { email: identifier } })
     } else {
       if (!mobileRegex.test(identifier)) {
         setError('Mobile number must be exactly 10 digits')
         return
       }
-      // Navigate to OTP verification page with mobile number
       navigate('/forgot-otp', { state: { mobileNumber: identifier } })
     }
   }
