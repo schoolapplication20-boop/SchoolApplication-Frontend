@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-
 /* Forgot OTP Page */
 .forgot-otp-page {
   font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -11,19 +9,6 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-
-=======
-/* Forgot OTP Page */
-.forgot-otp-page {
-  background-color: #f5f5f5;
-}
-
-.forgot-otp-left {
-  background: linear-gradient(135deg, #7cb342 0%, #689f38 100%);
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
->>>>>>> login-page
 }
 
 .schoolers-logo {
@@ -34,37 +19,22 @@
   display: flex;
   align-items: center;
   justify-content: center;
-<<<<<<< HEAD
   font-size: 32px;
-=======
-  font-size: 28px;
->>>>>>> login-page
   font-weight: bold;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .schoolers-title {
-<<<<<<< HEAD
   font-size: 30px;
   font-weight: 700;
-=======
-  font-size: 28px;
-  font-weight: bold;
->>>>>>> login-page
   color: white;
   margin: 0;
 }
 
 .tagline h2 {
-<<<<<<< HEAD
   font-size: 34px;
   font-weight: 600;
   line-height: 1.05;
-=======
-  font-size: 24px;
-  font-weight: 600;
-  line-height: 1.4;
->>>>>>> login-page
   color: white;
   margin: 8px 0;
 }
@@ -82,10 +52,6 @@
 /* OTP Card Styling */
 .forgot-otp-card {
   background: white;
-<<<<<<< HEAD
-   
-=======
->>>>>>> login-page
   border-radius: 16px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
   max-width: 500px;
@@ -95,32 +61,16 @@
 .forgot-otp-card h3 {
   font-size: 28px;
   font-weight: 700;
-<<<<<<< HEAD
-
 }
 
 .forgot-otp-card p {
   font-size: 15px;
   color: #7a7a7a;
- 
-  
-=======
-  color: #333;
-}
-
-.forgot-otp-card p {
-  font-size: 14px;
-  color: #999;
->>>>>>> login-page
 }
 
 /* OTP Input Container */
 .otp-input-container {
   margin: 30px 0;
-<<<<<<< HEAD
-
-=======
->>>>>>> login-page
 }
 
 .otp-input {
