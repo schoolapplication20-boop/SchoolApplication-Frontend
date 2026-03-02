@@ -19,3 +19,4 @@ export const isSchoolSetupCompleted = () => localStorage.getItem(SCHOOL_SETUP_CO
 
 export const getPostLoginRoute = () => (isSchoolSetupCompleted() ? '/dashboard' : '/admin-setup')
 
+
