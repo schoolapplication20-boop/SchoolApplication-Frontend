@@ -70,13 +70,12 @@ const Login = () => {
       const pwd = formData.password || ''
       const storedCredentials = getStoredCredentials()
       const defaultPasswordRetired = isDefaultPasswordRetired()
-      const hasStoredUpdatedPassword = storedCredentials.password !== DEFAULT_PASSWORD
 
       if (!username || !pwd) {
         alert('Please enter username and password')
         return
       }
-      if (defaultPasswordRetired && hasStoredUpdatedPassword && pwd === DEFAULT_PASSWORD) {
+      if (defaultPasswordRetired && pwd === DEFAULT_PASSWORD) {
         alert('Invalid credentials')
         return
       }
