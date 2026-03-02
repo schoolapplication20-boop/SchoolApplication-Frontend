@@ -12,19 +12,20 @@ import Visibility from '@mui/icons-material/Visibility'
 import VisibilityOff from '@mui/icons-material/VisibilityOff'
 import { Link, useNavigate } from 'react-router-dom'
 import {
+  DEFAULT_PASSWORD,
   DUMMY_RESET_CREDENTIALS,
   getStoredCredentials,
+  isDefaultPasswordRetired,
   setStoredCredentials,
 } from '../../utils/authStorage'
 import { getPostLoginRoute } from '../../utils/adminSetupStorage'
 
 const Login = () => {
   const OTP_VALIDITY_SECONDS = 45
-  const emailRegex = /^[^\s@]+@gmail\.com$/
   const navigate = useNavigate()
 
   const [formData, setFormData] = useState({
-    email: '',
+    username: '',
     password: '',
     mobileNumber: '',
     remember: false,
@@ -36,7 +37,7 @@ const Login = () => {
   const [otpInput, setOtpInput] = useState('')
   const [otpSecondsLeft, setOtpSecondsLeft] = useState(0)
   const [roleError, setRoleError] = useState(false)
-  const [loginMode, setLoginMode] = useState('email')
+  const [loginMode, setLoginMode] = useState('username')
 
   const isOtpExpired = otpSent && otpSecondsLeft === 0
 
@@ -86,42 +87,42 @@ const Login = () => {
       return
     }
 
-    if (loginMode === 'email') {
-      const email = (formData.email || '').trim().toLowerCase()
+    if (loginMode === 'username') {
+      const username = (formData.username || '').trim().toLowerCase()
       const pwd = formData.password || ''
-      const savedPassword = localStorage.getItem(`schoolers_password_${email}`)
       const storedCredentials = getStoredCredentials()
+      const savedPassword = localStorage.getItem(`schoolers_password_${username}`)
 
       if (!formData.role) {
         setRoleError(true)
         return
       }
-      if (!email || !pwd) {
-        alert('Please enter email and password')
-        return
-      }
-      if (!emailRegex.test(email)) {
-        alert('Email must be a @gmail.com address')
+
+      if (!username || !pwd) {
+        alert('Please enter username and password')
         return
       }
 
       if (savedPassword !== null) {
-        if (pwd === savedPassword) {
-          const requiresFirstReset = storedCredentials.needsPasswordReset || storedCredentials.email !== email
-
-          if (requiresFirstReset) {
-            setStoredCredentials({ email, password: pwd, needsPasswordReset: true })
-            navigate('/reset-password', { state: { fromDefaultLogin: true } })
-          } else {
-            navigate(getPostLoginRoute())
-          }
-        } else {
+        if (pwd !== savedPassword) {
           alert('Invalid Credentials')
+          return
+        }
+
+        if (storedCredentials.username === username && storedCredentials.needsPasswordReset) {
+          navigate('/reset-password', { state: { fromDefaultLogin: true } })
+        } else {
+          navigate(getPostLoginRoute())
         }
         return
       }
 
-      if (email === storedCredentials.email && pwd === storedCredentials.password) {
+      if (isDefaultPasswordRetired() && pwd === DEFAULT_PASSWORD) {
+        alert('Invalid Credentials')
+        return
+      }
+
+      if (username === storedCredentials.username && pwd === storedCredentials.password) {
         if (storedCredentials.needsPasswordReset) {
           navigate('/reset-password', { state: { fromDefaultLogin: true } })
         } else {
@@ -130,13 +131,8 @@ const Login = () => {
         return
       }
 
-      if (DUMMY_RESET_CREDENTIALS.some((cred) => cred.email === email && cred.password === pwd)) {
-        if (storedCredentials.email === email && !storedCredentials.needsPasswordReset) {
-          alert('Invalid Credentials')
-          return
-        }
-
-        setStoredCredentials({ email, password: pwd, needsPasswordReset: true })
+      if (DUMMY_RESET_CREDENTIALS.some((cred) => cred.username === username && cred.password === pwd)) {
+        setStoredCredentials({ username, password: pwd, needsPasswordReset: true })
         navigate('/reset-password', { state: { fromDefaultLogin: true } })
         return
       }
@@ -223,15 +219,15 @@ const Login = () => {
                     className="form-check-input"
                     type="radio"
                     name="loginMode"
-                    id="modeEmail"
-                    value="email"
-                    checked={loginMode === 'email'}
+                    id="modeUsername"
+                    value="username"
+                    checked={loginMode === 'username'}
                     onChange={() => {
-                      setLoginMode('email')
+                      setLoginMode('username')
                       resetOtpState()
                     }}
                   />
-                  <label className="form-check-label" htmlFor="modeEmail">Login with Email</label>
+                  <label className="form-check-label" htmlFor="modeUsername">Login with Username</label>
                 </div>
                 <div className="form-check">
                   <input
@@ -250,7 +246,7 @@ const Login = () => {
                 </div>
               </div>
 
-              {loginMode === 'email' && (
+              {loginMode === 'username' && (
                 <>
                   <div className="mt-2">
                     <label className="input-label">Role</label>
@@ -277,12 +273,12 @@ const Login = () => {
                     </TextField>
                   </div>
 
-                  <label className="input-label">Email address</label>
+                  <label className="input-label">Username</label>
                   <TextField
-                    name="email"
+                    name="username"
                     variant="outlined"
-                    placeholder="Enter Your ID"
-                    value={formData.email}
+                    placeholder="Enter Username"
+                    value={formData.username}
                     onChange={handleChange}
                     fullWidth
                     size="small"

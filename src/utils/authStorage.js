@@ -1,32 +1,34 @@
 const AUTH_STORAGE_KEY = 'schoolers_auth_admin'
+const DEFAULT_PASSWORD_RETIRED_KEY = 'schoolers_default_password_retired'
+export const DEFAULT_PASSWORD = 'Dummy@123'
 
 export const DEFAULT_CREDENTIALS = {
-  email: 'dummy.user1@gmail.com',
-  password: 'Dummy@123',
+  username: 'schooladmin1',
+  password: DEFAULT_PASSWORD,
   needsPasswordReset: true,
 }
 
 export const SECONDARY_DEFAULT_CREDENTIALS = {
-  email: 'dummy.user2@gmail.com',
-  password: 'Dummy@234',
+  username: 'schooladmin2',
+  password: DEFAULT_PASSWORD,
   needsPasswordReset: true,
 }
 
 export const TERTIARY_DEFAULT_CREDENTIALS = {
-  email: 'dummy.user3@gmail.com',
-  password: 'Dummy@345',
+  username: 'schooladmin3',
+  password: DEFAULT_PASSWORD,
   needsPasswordReset: true,
 }
 
 export const QUATERNARY_DEFAULT_CREDENTIALS = {
-  email: 'dummy.user4@gmail.com',
-  password: 'Dummy@456',
+  username: 'schooladmin4',
+  password: DEFAULT_PASSWORD,
   needsPasswordReset: true,
 }
 
 export const QUINARY_DEFAULT_CREDENTIALS = {
-  email: 'dummy.user5@gmail.com',
-  password: 'Dummy@567',
+  username: 'schooladmin5',
+  password: DEFAULT_PASSWORD,
   needsPasswordReset: true,
 }
 
@@ -44,22 +46,25 @@ export const getStoredCredentials = () => {
     if (!raw) return DEFAULT_CREDENTIALS
 
     const parsed = JSON.parse(raw)
-    if (!parsed?.email || !parsed?.password) return DEFAULT_CREDENTIALS
+    const parsedUsername = (parsed?.username || parsed?.email || '').trim()
+    if (!parsedUsername || !parsed?.password) return DEFAULT_CREDENTIALS
 
     return {
-      email: parsed.email,
+      username: parsedUsername,
       password: parsed.password,
       needsPasswordReset:
         typeof parsed.needsPasswordReset === 'boolean'
           ? parsed.needsPasswordReset
           : DUMMY_RESET_CREDENTIALS.some(
-              (cred) => cred.email === parsed.email && cred.password === parsed.password,
+              (cred) => cred.username === parsedUsername && cred.password === parsed.password,
             ),
     }
   } catch {
     return DEFAULT_CREDENTIALS
   }
 }
+
+export const isDefaultPasswordRetired = () => localStorage.getItem(DEFAULT_PASSWORD_RETIRED_KEY) === 'true'
 
 export const saveNewPassword = (newPassword) => {
   const current = getStoredCredentials()
@@ -68,22 +73,14 @@ export const saveNewPassword = (newPassword) => {
     password: newPassword,
     needsPasswordReset: false,
   }
+  if (current.password === DEFAULT_PASSWORD) {
+    localStorage.setItem(DEFAULT_PASSWORD_RETIRED_KEY, 'true')
+  }
   localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(updated))
-  localStorage.setItem(`schoolers_password_${updated.email}`, newPassword)
+  localStorage.setItem(`schoolers_password_${updated.username}`, newPassword)
   return updated
 }
 
 export const setStoredCredentials = (credentials) => {
   localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(credentials))
-}
-
-export const markPasswordResetSkipped = () => {
-  const current = getStoredCredentials()
-  localStorage.setItem(
-    AUTH_STORAGE_KEY,
-    JSON.stringify({
-      ...current,
-      needsPasswordReset: false,
-    }),
-  )
 }

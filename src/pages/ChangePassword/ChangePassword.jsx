@@ -54,7 +54,7 @@ const ChangePassword = () => {
     const loginAccountKey = email || identifier || 'admin@gmail.com'
     const accountPasswordFromLocalStorage = localStorage.getItem(`schoolers_password_${loginAccountKey}`)
     const accountPasswordFromAuthStorage =
-      email && storedCredentials.email?.toLowerCase() === email ? storedCredentials.password : null
+      storedCredentials.username?.toLowerCase() === loginAccountKey ? storedCredentials.password : null
     const oldPassword = accountPasswordFromLocalStorage || accountPasswordFromAuthStorage
 
     if (oldPassword && formData.password === oldPassword) {

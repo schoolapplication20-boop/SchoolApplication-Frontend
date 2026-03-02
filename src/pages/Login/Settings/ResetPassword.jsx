@@ -51,6 +51,12 @@ const ResetPassword = () => {
     }, 600)
   }
 
+
+  const handleSkip = () => {
+    navigate('/dashboard')
+  }
+
+
   useEffect(() => {
     if (!showSuccessPopup) return undefined
     const timer = setTimeout(() => {
@@ -130,6 +136,7 @@ const ResetPassword = () => {
             {error && <div className="rp-error">{error}</div>}
             <div className="rp-actions">
               <button className="rp-button" type="submit">Reset password</button>
+              <button type="button" className="rp-skip-button" onClick={handleSkip}>Skip for now</button>
             </div>
           </form>
         </div>
