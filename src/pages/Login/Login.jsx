@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react'
 import './Login.css'
 import kidsImg from '../../assets/images/kids.png'
 import TextField from '@mui/material/TextField'
-import MenuItem from '@mui/material/MenuItem'
 import Checkbox from '@mui/material/Checkbox'
 import FormControlLabel from '@mui/material/FormControlLabel'
 import IconButton from '@mui/material/IconButton'
@@ -10,7 +9,7 @@ import InputAdornment from '@mui/material/InputAdornment'
 import Button from '@mui/material/Button'
 import Visibility from '@mui/icons-material/Visibility'
 import VisibilityOff from '@mui/icons-material/VisibilityOff'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'         
 import {
   DEFAULT_PASSWORD,
   DUMMY_RESET_CREDENTIALS,
@@ -18,7 +17,7 @@ import {
   isDefaultPasswordRetired,
   setStoredCredentials,
 } from '../../utils/authStorage'
-import { getPostLoginRoute } from '../../utils/adminSetupStorage'
+import { getPostLoginRoute, setActiveLoginUser } from '../../utils/adminSetupStorage'
 
 const Login = () => {
   const OTP_VALIDITY_SECONDS = 45
@@ -28,7 +27,6 @@ const Login = () => {
     username: '',
     password: '',
     mobileNumber: '',
-    role: '',
     remember: false,
   })
 
@@ -36,7 +34,6 @@ const Login = () => {
   const [otpSent, setOtpSent] = useState(false)
   const [otpInput, setOtpInput] = useState('')
   const [otpSecondsLeft, setOtpSecondsLeft] = useState(0)
-  const [roleError, setRoleError] = useState(false)
   const [loginMode, setLoginMode] = useState('username')
 
   const isOtpExpired = otpSent && otpSecondsLeft === 0
@@ -66,7 +63,6 @@ const Login = () => {
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
     setFormData((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }))
-    if (name === 'role') setRoleError(false)
   }
 
   const handleMobileChange = (e) => {
@@ -91,49 +87,62 @@ const Login = () => {
       const username = (formData.username || '').trim().toLowerCase()
       const pwd = formData.password || ''
       const storedCredentials = getStoredCredentials()
+      const storedUsername = (storedCredentials.username || '').trim().toLowerCase()
       const savedPassword = localStorage.getItem(`schoolers_password_${username}`)
-
-      if (!formData.role) {
-        setRoleError(true)
-        return
-      }
 
       if (!username || !pwd) {
         alert('Please enter username and password')
         return
       }
 
+      const isDummyResetCredential = DUMMY_RESET_CREDENTIALS.some(
+        (cred) => cred.username === username && cred.password === pwd,
+      )
+
+      // Let known dummy credentials always enter reset flow, even if a stale
+      // per-user password is still present from an older session.
+      if (isDummyResetCredential) {
+        setStoredCredentials({ username, password: pwd, needsPasswordReset: true })
+        localStorage.setItem(`schoolers_password_${username}`, pwd)
+        navigate('/reset-password', { state: { fromDefaultLogin: true } })
+        return
+      }
+
       if (savedPassword !== null) {
-        if (pwd !== savedPassword) {
+        const matchesSavedPassword = pwd === savedPassword
+        const matchesStoredPassword = username === storedUsername && pwd === storedCredentials.password
+
+        if (!matchesSavedPassword && !matchesStoredPassword) {
           alert('Invalid Credentials')
           return
         }
 
-        if (storedCredentials.username === username && storedCredentials.needsPasswordReset) {
+        // Keep username password key aligned if auth storage was updated first.
+        if (!matchesSavedPassword && matchesStoredPassword) {
+          localStorage.setItem(`schoolers_password_${username}`, storedCredentials.password)
+        }
+
+        if (storedUsername === username && storedCredentials.needsPasswordReset) {
           navigate('/reset-password', { state: { fromDefaultLogin: true } })
         } else {
-          navigate(getPostLoginRoute())
+          setActiveLoginUser(username)
+          navigate(getPostLoginRoute(username))
+        }
+        return
+      }
+
+      if (username === storedUsername && pwd === storedCredentials.password) {
+        if (storedCredentials.needsPasswordReset) {
+          navigate('/reset-password', { state: { fromDefaultLogin: true } })
+        } else {
+          setActiveLoginUser(username)
+          navigate(getPostLoginRoute(username))
         }
         return
       }
 
       if (isDefaultPasswordRetired() && pwd === DEFAULT_PASSWORD) {
         alert('Invalid Credentials')
-        return
-      }
-
-      if (username === storedCredentials.username && pwd === storedCredentials.password) {
-        if (storedCredentials.needsPasswordReset) {
-          navigate('/reset-password', { state: { fromDefaultLogin: true } })
-        } else {
-          navigate(getPostLoginRoute())
-        }
-        return
-      }
-
-      if (DUMMY_RESET_CREDENTIALS.some((cred) => cred.username === username && cred.password === pwd)) {
-        setStoredCredentials({ username, password: pwd, needsPasswordReset: true })
-        navigate('/reset-password', { state: { fromDefaultLogin: true } })
         return
       }
 
@@ -160,7 +169,14 @@ const Login = () => {
     }
 
     if (mobile === '9390417936' && otpInput === '6744') {
-      navigate(getPostLoginRoute())
+      const storedCredentials = getStoredCredentials()
+      const activeUserFromStoredCredentials = (storedCredentials.username || '').trim().toLowerCase()
+      if (storedCredentials.needsPasswordReset) {
+        navigate('/reset-password', { state: { fromDefaultLogin: true } })
+        return
+      }
+      setActiveLoginUser(activeUserFromStoredCredentials)
+      navigate(getPostLoginRoute(activeUserFromStoredCredentials))
     } else {
       alert('Invalid credentials')
     }
@@ -248,31 +264,6 @@ const Login = () => {
 
               {loginMode === 'username' && (
                 <>
-                  <div className="mt-2">
-                    <label className="input-label">Role</label>
-                    <TextField
-                      select
-                      name="role"
-                      variant="outlined"
-                      value={formData.role}
-                      onChange={handleChange}
-                      fullWidth
-                      size="small"
-                      displayEmpty
-                      error={roleError}
-                      helperText={roleError ? 'Please select a role' : ''}
-                      SelectProps={{
-                        renderValue: (selected) => (!selected ? 'Select Role' : selected),
-                      }}
-                    >
-                      <MenuItem value="">Select Role</MenuItem>
-                      <MenuItem value="Admin">Admin</MenuItem>
-                      <MenuItem value="Teacher">Teacher</MenuItem>
-                      <MenuItem value="Parent">Parent</MenuItem>
-                      <MenuItem value="FrontOffice">FrontOffice</MenuItem>
-                    </TextField>
-                  </div>
-
                   <label className="input-label">Username</label>
                   <TextField
                     name="username"

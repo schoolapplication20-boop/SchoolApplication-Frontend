@@ -4,7 +4,7 @@ import { useNavigate, Link, useLocation } from 'react-router-dom'
 import changePasswordImg from '../../assets/images/forgot.png'
 import Visibility from '@mui/icons-material/Visibility'
 import VisibilityOff from '@mui/icons-material/VisibilityOff'
-import { getStoredCredentials } from '../../utils/authStorage'
+import { DUMMY_RESET_CREDENTIALS, getStoredCredentials, setStoredCredentials } from '../../utils/authStorage'
 
 const ChangePassword = () => {
   const navigate = useNavigate()
@@ -49,12 +49,39 @@ const ChangePassword = () => {
     const email = (location.state?.email || '').trim().toLowerCase()
     const identifier = (location.state?.identifier || '').trim().toLowerCase()
     const storedCredentials = getStoredCredentials()
+    const storedUsername = (storedCredentials.username || '').trim().toLowerCase()
+    const identifierLooksLikeUsername = Boolean(identifier) && !identifier.includes('@') && !/^\d{10}$/.test(identifier)
 
-    // Keep reset password aligned with email login key used in Login.jsx.
-    const loginAccountKey = email || identifier || 'admin@gmail.com'
-    const accountPasswordFromLocalStorage = localStorage.getItem(`schoolers_password_${loginAccountKey}`)
-    const accountPasswordFromAuthStorage =
-      storedCredentials.username?.toLowerCase() === loginAccountKey ? storedCredentials.password : null
+    const knownDummyUsernames = DUMMY_RESET_CREDENTIALS
+      .map((credential) => (credential.username || '').trim().toLowerCase())
+      .filter(Boolean)
+
+    const loginKeys = new Set([identifier, email].filter(Boolean))
+    if (storedUsername) {
+      loginKeys.add(storedUsername)
+    }
+
+    // For email/mobile reset flow we don't know the exact username, so persist
+    // the password for known admin usernames as well to keep login in sync.
+    if (!identifierLooksLikeUsername) {
+      knownDummyUsernames.forEach((username) => loginKeys.add(username))
+    }
+
+    if (loginKeys.size === 0) {
+      loginKeys.add(storedUsername || knownDummyUsernames[0] || 'schooladmin1')
+    }
+
+    const authUsername = identifierLooksLikeUsername
+      ? identifier
+      : storedUsername || knownDummyUsernames[0] || 'schooladmin1'
+    loginKeys.add(authUsername)
+
+    const loginKeysList = [...loginKeys]
+
+    const accountPasswordFromLocalStorage = loginKeysList
+      .map((key) => localStorage.getItem(`schoolers_password_${key}`))
+      .find((password) => password)
+    const accountPasswordFromAuthStorage = storedCredentials.password || null
     const oldPassword = accountPasswordFromLocalStorage || accountPasswordFromAuthStorage
 
     if (oldPassword && formData.password === oldPassword) {
@@ -62,12 +89,16 @@ const ChangePassword = () => {
       return
     }
 
-    localStorage.setItem(`schoolers_password_${loginAccountKey}`, formData.password)
+    loginKeysList.forEach((key) => {
+      localStorage.setItem(`schoolers_password_${key}`, formData.password)
+    })
 
-    // Also update identifier key when present to avoid breaking existing local demo data.
-    if (identifier && identifier !== loginAccountKey) {
-      localStorage.setItem(`schoolers_password_${identifier}`, formData.password)
-    }
+    setStoredCredentials({
+      ...storedCredentials,
+      username: authUsername,
+      password: formData.password,
+      needsPasswordReset: false,
+    })
 
     alert('Password changed successfully!')
     navigate('/')
@@ -111,7 +142,7 @@ const ChangePassword = () => {
             <label className="form-label">New Password</label>
             <div className="password-field no-toggle mb-3">
               <input
-                type="password"
+                type="text"
                 className="form-control form-control-lg change-password-input"
                 placeholder="Enter New Password"
                 name="password"

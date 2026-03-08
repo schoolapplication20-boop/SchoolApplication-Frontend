@@ -3,6 +3,7 @@ import './ForgotPassword.css'
 import forgotImg from '../../../assets/images/forgot.png'
 import otpIcon from '../../../assets/images/otp.png'
 import { Link, useNavigate } from 'react-router-dom'
+import { DUMMY_RESET_CREDENTIALS, getStoredCredentials } from '../../../utils/authStorage'
 
 const ForgotPassword = () => {
   const navigate = useNavigate()
@@ -11,6 +12,9 @@ const ForgotPassword = () => {
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   const mobileRegex = /^[0-9]{10}$/
+  const registeredDummyUsernames = new Set(
+    DUMMY_RESET_CREDENTIALS.map((cred) => (cred.username || '').trim().toLowerCase()).filter(Boolean),
+  )
 
   const handleIdentifierChange = (e) => {
     let value = e.target.value
@@ -20,31 +24,40 @@ const ForgotPassword = () => {
   }
 
   const handleSendOTP = () => {
-    if (!identifier.trim()) {
-      setError('Please enter email or mobile number')
+    const rawIdentifier = identifier.trim()
+    const normalizedIdentifier = rawIdentifier.toLowerCase()
+
+    if (!rawIdentifier) {
+      setError('Please enter username, email or mobile number')
       return
     }
 
-    const isEmail = identifier.includes('@')
+    const isEmail = normalizedIdentifier.includes('@')
     if (isEmail) {
-      if (!emailRegex.test(identifier)) {
+      if (!emailRegex.test(normalizedIdentifier)) {
         setError('Please enter a valid email address')
         return
       }
-      navigate('/forgot-otp', { state: { email: identifier } })
-    } else {
-      if (!mobileRegex.test(identifier)) {
+      navigate('/forgot-otp', { state: { email: normalizedIdentifier, identifier: normalizedIdentifier } })
+      return
+    }
+
+    if (/^\d+$/.test(rawIdentifier)) {
+      if (!mobileRegex.test(rawIdentifier)) {
         setError('Mobile number must be exactly 10 digits')
         return
       }
-      navigate('/forgot-otp', { state: { mobileNumber: identifier } })
-    }
-
-    if (!mobileRegex.test(identifier)) {
-      setError('Mobile number must be exactly 10 digits')
+      navigate('/forgot-otp', { state: { mobileNumber: rawIdentifier, identifier: rawIdentifier } })
       return
     }
-    navigate('/forgot-otp', { state: { mobileNumber: identifier } })
+
+    const storedUsername = (getStoredCredentials().username || '').trim().toLowerCase()
+    if (!registeredDummyUsernames.has(normalizedIdentifier) && normalizedIdentifier !== storedUsername) {
+      setError('Please enter a registered username, email or mobile number')
+      return
+    }
+
+    navigate('/forgot-otp', { state: { identifier: normalizedIdentifier } })
   }
 
   return (
@@ -79,13 +92,13 @@ const ForgotPassword = () => {
               <img src={otpIcon} alt="otp icon" />
             </div>
             <h3 className="mb-2">Verify Identity</h3>
-            <p className="text-muted">Enter your registered email or mobile number</p>
+            <p className="text-muted">Enter your registered username, email or mobile number</p>
 
-            <label className="form-label mt-3">Email or Mobile Number</label>
+            <label className="form-label mt-3">Username, Email or Mobile Number</label>
             <input
               type="text"
               className="form-control form-control-lg mb-3"
-              placeholder="Enter Your ID or Phone"
+              placeholder="Enter Username, Email or Mobile"
               value={identifier}
               onChange={handleIdentifierChange}
             />

@@ -8,6 +8,7 @@ import './pages/AuthInputConsistency.css'
 import ResetPassword from './pages/Login/Settings/ResetPassword'
 import Dashboard from './pages/Dashboard/Dashboard'
 import AdminSetup from './pages/adminsetup/AdminSetup'
+import Teachersprofile from './pages/Teachers/Teachersprofile'
 
 const App = () => {
   return (
@@ -19,6 +20,7 @@ const App = () => {
       <Route path="/reset" element={<ResetPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/admin-setup" element={<AdminSetup />} />
+      <Route path="/teachers-profile" element={<Teachersprofile />} />
       <Route path="/dashboard" element={<Dashboard />} />
     </Routes>
   )

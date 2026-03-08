@@ -9,7 +9,7 @@ const ForgotOtp = () => {
   const location = useLocation()
   const mobileNumber = location.state?.mobileNumber || ''
   const email = location.state?.email || ''
-  const identifier = mobileNumber || email
+  const identifier = (location.state?.identifier || mobileNumber || email || '').toLowerCase()
 
   const [otp, setOtp] = useState(['', '', '', ''])
   const [error, setError] = useState('')
@@ -69,11 +69,6 @@ const ForgotOtp = () => {
     const enteredOtp = otp.join('')
     if (!enteredOtp || enteredOtp.length !== 4) {
       setError('Please enter all 4 digits')
-      return
-    }
-
-    if (isOtpExpired) {
-      setError('OTP expired. Please resend OTP.')
       return
     }
 
@@ -140,12 +135,12 @@ const ForgotOtp = () => {
             {error && <div className="alert alert-danger text-center mb-3">{error}</div>}
 
             <div className="text-center mb-4">
-              <small className="otp-expiry-text d-block mb-2">
-                {isOtpExpired ? 'OTP expired. You can resend now.' : `OTP expires in ${formatOtpTime(otpSecondsLeft)}`}
-              </small>
               <button className="btn btn-link p-0 resend-otp-btn" onClick={handleResendOtp} disabled={!isOtpExpired}>
                 Resend OTP
               </button>
+              <div className="otp-expiry-text mt-1">
+                {isOtpExpired ? 'OTP expired. Click Resend OTP to get a new code.' : `OTP expires in ${formatOtpTime(otpSecondsLeft)}`}
+              </div>
             </div>
 
             <button className="btn verify-otp-btn btn-lg w-100" onClick={handleVerifyOtp}>
