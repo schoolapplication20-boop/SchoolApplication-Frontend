@@ -3,11 +3,10 @@ import { Routes, Route } from 'react-router-dom'
 import Login from './pages/Login/Login'
 import ForgotPassword from './pages/Login/Forgot password/ForgotPassword'
 import ForgotOtp from './pages/Login/Forgot password/ForgotOtp'
-import ChangePassword from './pages/ChangePassword/ChangePassword'
-import './pages/AuthInputConsistency.css'
 import ResetPassword from './pages/Login/Settings/ResetPassword'
 import Dashboard from './pages/Dashboard/Dashboard'
 import AdminSetup from './pages/adminsetup/AdminSetup'
+import ChangePassword from './pages/ChangePassword/ChangePassword'
 
 const App = () => {
   return (

@@ -7,64 +7,56 @@ const ForgotOtp = () => {
   const OTP_VALIDITY_SECONDS = 45
   const navigate = useNavigate()
   const location = useLocation()
+  const username = location.state?.username || ''
   const mobileNumber = location.state?.mobileNumber || ''
   const email = location.state?.email || ''
-  const identifier = mobileNumber || email
+  const identifier = username || mobileNumber || email
 
   const [otp, setOtp] = useState(['', '', '', ''])
   const [error, setError] = useState('')
-  const [otpSecondsLeft, setOtpSecondsLeft] = useState(OTP_VALIDITY_SECONDS)
+  const [otpTimer, setOtpTimer] = useState(OTP_VALIDITY_SECONDS)
   const otpRefs = [useRef(), useRef(), useRef(), useRef()]
 
   const DUMMY_OTP = '1234'
-  const isOtpExpired = otpSecondsLeft === 0
+  const isOtpExpired = otpTimer === 0
 
   useEffect(() => {
-    if (otpSecondsLeft <= 0) return undefined
-
+    if (otpTimer <= 0) return undefined
     const intervalId = setInterval(() => {
-      setOtpSecondsLeft((prev) => (prev > 0 ? prev - 1 : 0))
+      setOtpTimer((prev) => (prev > 0 ? prev - 1 : 0))
     }, 1000)
-
     return () => clearInterval(intervalId)
-  }, [otpSecondsLeft])
-
-  const formatOtpTime = (seconds) => {
-    const mm = String(Math.floor(seconds / 60)).padStart(2, '0')
-    const ss = String(seconds % 60).padStart(2, '0')
-    return `${mm}:${ss}`
-  }
+  }, [otpTimer])
 
   const handleOtpChange = (index, value) => {
     if (!/^\d*$/.test(value)) return
-
     const newOtp = [...otp]
     newOtp[index] = value.slice(0, 1)
     setOtp(newOtp)
     setError('')
-
     if (value && index < 3) otpRefs[index + 1].current.focus()
   }
 
   const handleKeyDown = (index, e) => {
-    if (e.key === 'Backspace' && !otp[index] && index > 0) {
-      otpRefs[index - 1].current.focus()
-    }
+    if (e.key === 'Backspace' && !otp[index] && index > 0) otpRefs[index - 1].current.focus()
   }
 
   const handleResendOtp = () => {
     if (!isOtpExpired) return
-
     setOtp(['', '', '', ''])
     setError('')
-    setOtpSecondsLeft(OTP_VALIDITY_SECONDS)
+    setOtpTimer(OTP_VALIDITY_SECONDS)
     otpRefs[0].current.focus()
     alert(`New OTP sent successfully (Dummy OTP: ${DUMMY_OTP})`)
   }
 
   const handleVerifyOtp = () => {
-    const enteredOtp = otp.join('')
+    if (isOtpExpired) {
+      setError('OTP expired. Please click Resend OTP to get a new code.')
+      return
+    }
 
+    const enteredOtp = otp.join('')
     if (!enteredOtp || enteredOtp.length !== 4) {
       setError('Please enter all 4 digits')
       return
@@ -77,7 +69,7 @@ const ForgotOtp = () => {
 
     if (enteredOtp === DUMMY_OTP) {
       alert('OTP Verified Successfully')
-      navigate('/change-password', { state: { mobileNumber, email, identifier } })
+      navigate('/change-password', { state: { username, mobileNumber, email, identifier } })
     } else {
       setError('Invalid OTP. Please try again.')
       setOtp(['', '', '', ''])
@@ -115,7 +107,8 @@ const ForgotOtp = () => {
             </div>
 
             <h3 className="mb-2 text-center">Enter OTP</h3>
-            <p className="text-muted text-center mb-4">Please Enter Your OTP To Continue</p>
+            <p className="text-muted text-center mb-1">Please Enter Your OTP To Continue</p>
+            {identifier && <p className="text-muted text-center small mb-4">Sent to: {identifier}</p>}
 
             <div className="otp-input-container d-flex justify-content-center gap-3 mb-4">
               {otp.map((digit, index) => (
@@ -137,9 +130,7 @@ const ForgotOtp = () => {
             {error && <div className="alert alert-danger text-center mb-3">{error}</div>}
 
             <div className="text-center mb-4">
-              <small className="otp-expiry-text d-block mb-2">
-                {isOtpExpired ? 'OTP expired. You can resend now.' : `OTP expires in ${formatOtpTime(otpSecondsLeft)}`}
-              </small>
+              <p className="text-muted small mb-2">OTP expires in: {otpTimer}s</p>
               <button className="btn btn-link p-0 resend-otp-btn" onClick={handleResendOtp} disabled={!isOtpExpired}>
                 Resend OTP
               </button>

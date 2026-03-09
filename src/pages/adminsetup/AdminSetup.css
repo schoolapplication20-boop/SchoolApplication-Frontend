@@ -11,7 +11,6 @@
   max-width: none;
   margin: 0 auto;
   padding: 0 14px 14px;
-  --label-col-width: 190px;
   --field-gap: 12px;
 }
 
@@ -60,6 +59,16 @@
   font-size: 24px;
   margin: 0 0 12px;
   font-weight: 700;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-title .MuiSvgIcon-root {
+  color: #9fd647;
 }
 
 .school-grid {
@@ -123,7 +132,7 @@
 .fields-grid {
   display: grid;
   gap: var(--field-gap);
-  
+  align-items: start;
 }
 
 .fields-grid.one-col {
@@ -135,20 +144,19 @@
 }
 
 .fields-grid.three-col {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(220px, 1fr));
   margin-bottom: var(--field-gap);
 }
 
 .admin-setup-page label {
-  display: grid;
-  grid-template-columns: var(--label-col-width) minmax(0, 1fr);
-  align-items: center;
-  column-gap: 12px;
-  row-gap: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
   margin: 0;
   font-size: 14px;
   font-weight: 600;
   line-height: 1.25;
+  color: #2b2b2b;
 }
 
 .admin-setup-page input,
@@ -156,11 +164,11 @@
 .admin-setup-page textarea {
   width: 100%;
   box-sizing: border-box;
-  height: 34px;
+  height: 48px;
   border: 1px solid #cfcfcf;
-  border-radius: 2px;
-  padding: 6px 10px;
-  font-size: 13px;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 15px;
   font-family: inherit;
   background: #f7f7f7;
 }
@@ -168,6 +176,11 @@
 .admin-setup-page textarea {
   min-height: 72px;
   resize: vertical;
+}
+
+.contact-details-stack {
+  display: grid;
+  gap: var(--field-gap);
 }
 
 .bottom-grid {
@@ -183,10 +196,17 @@
 
 .roles-wrap {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 16px;
   font-size: 14px;
   font-weight: 600;
+}
+
+.roles-options {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
 }
 
 .roles-wrap label {
@@ -211,7 +231,7 @@
 
 @media (max-width: 1024px) {
   .admin-setup-shell {
-    --label-col-width: 170px;
+    --field-gap: 10px;
   }
 
   .school-grid {
@@ -236,7 +256,6 @@
 @media (max-width: 720px) {
   .admin-setup-shell {
     padding: 0 8px 10px;
-    --label-col-width: 1fr;
   }
 
   .setup-header {
@@ -262,11 +281,6 @@
   .fields-grid.two-col,
   .fields-grid.three-col {
     grid-template-columns: 1fr;
-  }
-
-  .admin-setup-page label {
-    grid-template-columns: 1fr;
-    gap: 6px;
   }
 
   .roles-wrap {

@@ -21,7 +21,7 @@ const ForgotPassword = () => {
 
   const handleSendOTP = () => {
     if (!identifier.trim()) {
-      setError('Please enter email or mobile number')
+      setError('Please enter username, email or mobile number')
       return
     }
 
@@ -32,13 +32,15 @@ const ForgotPassword = () => {
         return
       }
       navigate('/forgot-otp', { state: { email: identifier } })
-    } else {
-      if (!mobileRegex.test(identifier)) {
-        setError('Mobile number must be exactly 10 digits')
-        return
-      }
-      navigate('/forgot-otp', { state: { mobileNumber: identifier } })
+      return
     }
+
+    if (!mobileRegex.test(identifier)) {
+      const username = identifier.trim().toLowerCase()
+      navigate('/forgot-otp', { state: { username } })
+      return
+    }
+    navigate('/forgot-otp', { state: { mobileNumber: identifier } })
   }
 
   return (
@@ -73,9 +75,9 @@ const ForgotPassword = () => {
               <img src={otpIcon} alt="otp icon" />
             </div>
             <h3 className="mb-2">Verify Identity</h3>
-            <p className="text-muted">Enter your registered email or mobile number</p>
+            <p className="text-muted">Enter your registered username, email or mobile number</p>
 
-            <label className="form-label mt-3">Email or Mobile Number</label>
+            <label className="form-label mt-3">Username, Email or Mobile Number</label>
             <input
               type="text"
               className="form-control form-control-lg mb-3"

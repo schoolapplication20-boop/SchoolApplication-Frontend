@@ -17,5 +17,4 @@ export const saveSchoolSetupData = (data) => {
 
 export const isSchoolSetupCompleted = () => localStorage.getItem(SCHOOL_SETUP_COMPLETED_KEY) === 'true'
 
-export const getPostLoginRoute = () => (isSchoolSetupCompleted() ? '/dashboard' : '/admin-setup')
-
+export const getPostLoginRoute = () => '/admin-setup'

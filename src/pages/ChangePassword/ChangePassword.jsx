@@ -4,7 +4,7 @@ import { useNavigate, Link, useLocation } from 'react-router-dom'
 import changePasswordImg from '../../assets/images/forgot.png'
 import Visibility from '@mui/icons-material/Visibility'
 import VisibilityOff from '@mui/icons-material/VisibilityOff'
-import { getStoredCredentials } from '../../utils/authStorage'
+import { getStoredCredentials, saveNewPassword, setStoredCredentials } from '../../utils/authStorage'
 
 const ChangePassword = () => {
   const navigate = useNavigate()
@@ -46,12 +46,13 @@ const ChangePassword = () => {
       return
     }
 
+    const username = (location.state?.username || '').trim().toLowerCase()
     const email = (location.state?.email || '').trim().toLowerCase()
     const identifier = (location.state?.identifier || '').trim().toLowerCase()
     const storedCredentials = getStoredCredentials()
 
-    // Keep reset password aligned with email login key used in Login.jsx.
-    const loginAccountKey = email || identifier || 'admin@gmail.com'
+    // Prefer explicit username from forgot flow; fallback to currently active auth user.
+    const loginAccountKey = username || storedCredentials.username?.toLowerCase() || email || identifier
     const accountPasswordFromLocalStorage = localStorage.getItem(`schoolers_password_${loginAccountKey}`)
     const accountPasswordFromAuthStorage =
       storedCredentials.username?.toLowerCase() === loginAccountKey ? storedCredentials.password : null
@@ -62,10 +63,21 @@ const ChangePassword = () => {
       return
     }
 
-    localStorage.setItem(`schoolers_password_${loginAccountKey}`, formData.password)
+    if (!loginAccountKey) {
+      setError('Unable to identify account for password reset. Please try forgot password again.')
+      return
+    }
+
+    // Ensure reset works with username login after returning to Login page.
+    setStoredCredentials({
+      username: loginAccountKey,
+      password: oldPassword || storedCredentials.password,
+      needsPasswordReset: false,
+    })
+    saveNewPassword(formData.password)
 
     // Also update identifier key when present to avoid breaking existing local demo data.
-    if (identifier && identifier !== loginAccountKey) {
+    if (identifier && identifier !== loginAccountKey && identifier !== email) {
       localStorage.setItem(`schoolers_password_${identifier}`, formData.password)
     }
 

@@ -165,7 +165,16 @@ const AdminSetup = () => {
           <div className="school-grid">
             <div className="left-grid">
               <label>School Name<input value={formData.schoolName} onChange={(e) => setField('schoolName', e.target.value)} placeholder="Enter School Name" /></label>
-              <label>School Type<input value={formData.schoolType} onChange={(e) => setField('schoolType', e.target.value)} placeholder="Enter School Type" /></label>
+              <label>
+                School Type *
+                <select value={formData.schoolType} onChange={(e) => setField('schoolType', e.target.value)}>
+                  <option value="">Select School Type</option>
+                  <option value="Government">Government</option>
+                  <option value="Private">Private</option>
+                  <option value="Aided">Aided</option>
+                  <option value="International">International</option>
+                </select>
+              </label>
               <label>School Code/Reg No.<input value={formData.schoolCode} onChange={(e) => setField('schoolCode', e.target.value)} placeholder="Enter Code" /></label>
               <label>
                 Established Year
@@ -199,15 +208,15 @@ const AdminSetup = () => {
             <div className="fields-grid one-col">
               <label>Address<input value={formData.address} onChange={(e) => setField('address', e.target.value)} placeholder="Enter Address" /></label>
             </div>
-            <div className="contact-inline-row">
-              <span className="inline-label">City</span>
-              <input value={formData.city} onChange={(e) => setField('city', e.target.value)} placeholder="Enter City" />
-              <span className="inline-label">State</span>
-              <select value={formData.state} onChange={(e) => setField('state', e.target.value)}>
-                {states.map((state) => <option key={state} value={state === '-State-' ? '' : state}>{state}</option>)}
-              </select>
-              <span className="inline-label">Pincode</span>
-              <input value={formData.pincode} onChange={(e) => setField('pincode', e.target.value)} placeholder="-Pincode-" />
+            <div className="fields-grid three-col">
+              <label>City<input value={formData.city} onChange={(e) => setField('city', e.target.value)} placeholder="Enter City" /></label>
+              <label>
+                State
+                <select value={formData.state} onChange={(e) => setField('state', e.target.value)}>
+                  {states.map((state) => <option key={state} value={state === '-State-' ? '' : state}>{state}</option>)}
+                </select>
+              </label>
+              <label>Pincode<input value={formData.pincode} onChange={(e) => setField('pincode', e.target.value)} placeholder="Enter Pincode" /></label>
             </div>
             <div className="fields-grid one-col">
               <label>Country<input value={formData.country} onChange={(e) => setField('country', e.target.value)} placeholder="Enter Country Name" /></label>
@@ -281,8 +290,8 @@ const AdminSetup = () => {
                   {dateFormats.map((format) => <option key={format} value={format}>{format}</option>)}
                 </select>
               </label>
-              <div className="roles-row">
-                <span className="roles-title">User Roles</span>
+              <div className="roles-wrap">
+                <span>User Roles</span>
                 <div className="roles-options">
                   <label><input type="checkbox" checked={formData.userRoles.admin} onChange={(e) => setRole('admin', e.target.checked)} /> Admin</label>
                   <label><input type="checkbox" checked={formData.userRoles.teacher} onChange={(e) => setRole('teacher', e.target.checked)} /> Teacher</label>
