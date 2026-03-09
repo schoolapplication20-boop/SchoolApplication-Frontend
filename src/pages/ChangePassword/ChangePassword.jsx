@@ -4,7 +4,7 @@ import { useNavigate, Link, useLocation } from 'react-router-dom'
 import changePasswordImg from '../../assets/images/forgot.png'
 import Visibility from '@mui/icons-material/Visibility'
 import VisibilityOff from '@mui/icons-material/VisibilityOff'
-import { getStoredCredentials, saveNewPassword, setStoredCredentials } from '../../utils/authStorage'
+import { DUMMY_RESET_CREDENTIALS, getStoredCredentials, setStoredCredentials } from '../../utils/authStorage'
 
 const ChangePassword = () => {
   const navigate = useNavigate()
@@ -15,6 +15,7 @@ const ChangePassword = () => {
     confirmPassword: '',
   })
   const [error, setError] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   const handleChange = (e) => {
@@ -23,7 +24,9 @@ const ChangePassword = () => {
     setError('')
   }
 
-  const handleChangePassword = () => {
+  const handleChangePassword = (e) => {
+    e.preventDefault()
+
     if (!formData.password || !formData.confirmPassword) {
       setError('Please fill in all fields')
       return
@@ -46,16 +49,44 @@ const ChangePassword = () => {
       return
     }
 
-    const username = (location.state?.username || '').trim().toLowerCase()
+    const routeUsername = (location.state?.username || '').trim().toLowerCase()
     const email = (location.state?.email || '').trim().toLowerCase()
     const identifier = (location.state?.identifier || '').trim().toLowerCase()
     const storedCredentials = getStoredCredentials()
+    const storedUsername = (storedCredentials.username || '').trim().toLowerCase()
+    const identifierLooksLikeUsername = Boolean(identifier) && !identifier.includes('@') && !/^\d{10}$/.test(identifier)
 
-    // Prefer explicit username from forgot flow; fallback to currently active auth user.
-    const loginAccountKey = username || storedCredentials.username?.toLowerCase() || email || identifier
-    const accountPasswordFromLocalStorage = localStorage.getItem(`schoolers_password_${loginAccountKey}`)
-    const accountPasswordFromAuthStorage =
-      storedCredentials.username?.toLowerCase() === loginAccountKey ? storedCredentials.password : null
+    const knownDummyUsernames = DUMMY_RESET_CREDENTIALS
+      .map((credential) => (credential.username || '').trim().toLowerCase())
+      .filter(Boolean)
+
+    const loginKeys = new Set([routeUsername, identifier, email].filter(Boolean))
+    if (storedUsername) {
+      loginKeys.add(storedUsername)
+    }
+
+    // For email/mobile reset flow we don't know the exact username, so persist
+    // the password for known admin usernames as well to keep login in sync.
+    if (!identifierLooksLikeUsername) {
+      knownDummyUsernames.forEach((dummyUsername) => loginKeys.add(dummyUsername))
+    }
+
+    if (loginKeys.size === 0) {
+      loginKeys.add(storedUsername || knownDummyUsernames[0] || 'schooladmin1')
+    }
+
+    const authUsername = routeUsername || (identifierLooksLikeUsername
+      ? identifier
+      : storedUsername || knownDummyUsernames[0] || 'schooladmin1'
+    )
+    loginKeys.add(authUsername)
+
+    const loginKeysList = [...loginKeys]
+
+    const accountPasswordFromLocalStorage = loginKeysList
+      .map((key) => localStorage.getItem(`schoolers_password_${key}`))
+      .find((password) => password)
+    const accountPasswordFromAuthStorage = storedCredentials.password || null
     const oldPassword = accountPasswordFromLocalStorage || accountPasswordFromAuthStorage
 
     if (oldPassword && formData.password === oldPassword) {
@@ -63,23 +94,16 @@ const ChangePassword = () => {
       return
     }
 
-    if (!loginAccountKey) {
-      setError('Unable to identify account for password reset. Please try forgot password again.')
-      return
-    }
+    loginKeysList.forEach((key) => {
+      localStorage.setItem(`schoolers_password_${key}`, formData.password)
+    })
 
-    // Ensure reset works with username login after returning to Login page.
     setStoredCredentials({
-      username: loginAccountKey,
-      password: oldPassword || storedCredentials.password,
+      ...storedCredentials,
+      username: authUsername,
+      password: formData.password,
       needsPasswordReset: false,
     })
-    saveNewPassword(formData.password)
-
-    // Also update identifier key when present to avoid breaking existing local demo data.
-    if (identifier && identifier !== loginAccountKey && identifier !== email) {
-      localStorage.setItem(`schoolers_password_${identifier}`, formData.password)
-    }
 
     alert('Password changed successfully!')
     navigate('/')
@@ -119,49 +143,59 @@ const ChangePassword = () => {
             <h3 className="mb-2 text-center">Set New Password</h3>
             <p className="text-muted text-center mb-4">Create a strong password for your account</p>
 
-            {/* New Password Field */}
-            <label className="form-label">New Password</label>
-            <div className="password-field no-toggle mb-3">
-              <input
-                type="password"
-                className="form-control form-control-lg change-password-input"
-                placeholder="Enter New Password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-              />
-            </div>
-            <small className="text-muted d-block mb-3">
-              Min 8 chars, include uppercase, lowercase, number and special character
-            </small>
+            <form onSubmit={handleChangePassword}>
+              {/* New Password Field */}
+              <label className="form-label">New Password</label>
+              <div className="password-field mb-3">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  className="form-control form-control-lg change-password-input"
+                  placeholder="Enter New Password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                />
+                <button
+                  className="password-toggle-btn"
+                  type="button"
+                  aria-label="Toggle new password visibility"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <VisibilityOff /> : <Visibility />}
+                </button>
+              </div>
+              <small className="text-muted d-block mb-3">
+                Min 8 chars, include uppercase, lowercase, number and special character
+              </small>
 
-            {/* Confirm Password Field */}
-            <label className="form-label">Confirm Password</label>
-            <div className="password-field mb-3">
-              <input
-                type={showConfirmPassword ? 'text' : 'password'}
-                className="form-control form-control-lg change-password-input"
-                placeholder="Confirm Password"
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-              />
-              <button
-                className="password-toggle-btn"
-                type="button"
-                aria-label="Toggle confirm password visibility"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              >
-                {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+              {/* Confirm Password Field */}
+              <label className="form-label">Confirm Password</label>
+              <div className="password-field mb-3">
+                <input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  className="form-control form-control-lg change-password-input"
+                  placeholder="Confirm Password"
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                />
+                <button
+                  className="password-toggle-btn"
+                  type="button"
+                  aria-label="Toggle confirm password visibility"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                </button>
+              </div>
+
+              {error && <div className="alert alert-danger text-center mb-3">{error}</div>}
+
+              {/* Change Password Button */}
+              <button type="submit" className="btn change-password-btn btn-lg w-100">
+                Change Password
               </button>
-            </div>
-
-            {error && <div className="alert alert-danger text-center mb-3">{error}</div>}
-
-            {/* Change Password Button */}
-            <button className="btn change-password-btn btn-lg w-100" onClick={handleChangePassword}>
-              Change Password
-            </button>
+            </form>
           </div>
         </div>
       </div>

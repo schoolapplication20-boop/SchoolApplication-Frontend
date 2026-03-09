@@ -3,6 +3,7 @@ import './ResetPassword.css'
 import Visibility from '@mui/icons-material/Visibility'
 import VisibilityOff from '@mui/icons-material/VisibilityOff'
 import { getStoredCredentials, saveNewPassword } from '../../../utils/authStorage'
+import { setActiveLoginUser } from '../../../utils/adminSetupStorage'
 import ResetSuccessfulScreen from './ResetSuccessfulScreen'
 import { useNavigate } from 'react-router-dom'
 
@@ -52,7 +53,9 @@ const ResetPassword = () => {
   }
 
   const handleSkip = () => {
-    navigate('/dashboard')
+    const activeUsername = (getStoredCredentials().username || '').trim().toLowerCase()
+    setActiveLoginUser(activeUsername)
+    navigate('/admin-setup')
   }
 
   useEffect(() => {

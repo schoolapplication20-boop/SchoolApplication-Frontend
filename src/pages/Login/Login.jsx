@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import './Login.css'
 import kidsImg from '../../assets/images/kids.png'
 import TextField from '@mui/material/TextField'
@@ -17,7 +17,7 @@ import {
   isDefaultPasswordRetired,
   setStoredCredentials,
 } from '../../utils/authStorage'
-import { getPostLoginRoute } from '../../utils/adminSetupStorage'
+import { getPostLoginRoute, setActiveLoginUser } from '../../utils/adminSetupStorage'
 
 const OTP_VALIDITY_SECONDS = 45
 
@@ -88,9 +88,57 @@ const Login = () => {
       const username = (formData.username || '').trim().toLowerCase()
       const pwd = formData.password || ''
       const storedCredentials = getStoredCredentials()
+      const storedUsername = (storedCredentials.username || '').trim().toLowerCase()
+      const savedPassword = localStorage.getItem(`schoolers_password_${username}`)
 
       if (!username || !pwd) {
         alert('Please enter username and password')
+        return
+      }
+
+      const isDummyResetCredential = DUMMY_RESET_CREDENTIALS.some(
+        (cred) => cred.username === username && cred.password === pwd,
+      )
+
+      // Let known dummy credentials always enter reset flow, even if a stale
+      // per-user password is still present from an older session.
+      if (isDummyResetCredential) {
+        setStoredCredentials({ username, password: pwd, needsPasswordReset: true })
+        localStorage.setItem(`schoolers_password_${username}`, pwd)
+        navigate('/reset-password', { state: { fromDefaultLogin: true } })
+        return
+      }
+
+      if (savedPassword !== null) {
+        const matchesSavedPassword = pwd === savedPassword
+        const matchesStoredPassword = username === storedUsername && pwd === storedCredentials.password
+
+        if (!matchesSavedPassword && !matchesStoredPassword) {
+          alert('Invalid Credentials')
+          return
+        }
+
+        // Keep username password key aligned if auth storage was updated first.
+        if (!matchesSavedPassword && matchesStoredPassword) {
+          localStorage.setItem(`schoolers_password_${username}`, storedCredentials.password)
+        }
+
+        if (storedUsername === username && storedCredentials.needsPasswordReset) {
+          navigate('/reset-password', { state: { fromDefaultLogin: true } })
+        } else {
+          setActiveLoginUser(username)
+          navigate(getPostLoginRoute(username))
+        }
+        return
+      }
+
+      if (username === storedUsername && pwd === storedCredentials.password) {
+        if (storedCredentials.needsPasswordReset) {
+          navigate('/reset-password', { state: { fromDefaultLogin: true } })
+        } else {
+          setActiveLoginUser(username)
+          navigate(getPostLoginRoute(username))
+        }
         return
       }
 
@@ -99,22 +147,7 @@ const Login = () => {
         return
       }
 
-      if (username === storedCredentials.username && pwd === storedCredentials.password) {
-        if (storedCredentials.needsPasswordReset) {
-          navigate('/reset-password', { state: { fromDefaultLogin: true } })
-        } else {
-          navigate(getPostLoginRoute())
-        }
-        return
-      }
-
-      if (DUMMY_RESET_CREDENTIALS.some((cred) => cred.username === username && cred.password === pwd)) {
-        setStoredCredentials({ username, password: pwd, needsPasswordReset: true })
-        navigate('/reset-password', { state: { fromDefaultLogin: true } })
-        return
-      }
-
-      alert('Invalid credentials')
+      alert('Invalid Credentials')
       return
     }
 
@@ -137,7 +170,18 @@ const Login = () => {
     }
 
     if (mobile === '9390417936' && otpInput === '6744') {
-      navigate(getPostLoginRoute())
+      const storedCredentials = getStoredCredentials()
+      const activeUserFromStoredCredentials = (storedCredentials.username || '').trim().toLowerCase()
+      const fallbackUser = DUMMY_RESET_CREDENTIALS[0]?.username || 'schooladmin1'
+      const resolvedActiveUser = activeUserFromStoredCredentials || fallbackUser
+
+      if (storedCredentials.needsPasswordReset) {
+        navigate('/reset-password', { state: { fromDefaultLogin: true } })
+        return
+      }
+
+      setActiveLoginUser(resolvedActiveUser)
+      navigate(getPostLoginRoute(resolvedActiveUser))
     } else {
       alert('Invalid credentials')
     }
