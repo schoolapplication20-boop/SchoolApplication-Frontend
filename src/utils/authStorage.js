@@ -2,27 +2,35 @@ const AUTH_STORAGE_KEY = 'schoolers_auth_admin'
 const DEFAULT_PASSWORD_RETIRED_KEY = 'schoolers_default_password_retired'
 export const DEFAULT_PASSWORD = 'Dummy@123'
 
-const createDefaultCredential = (username) => ({
-  username,
+export const DEFAULT_CREDENTIALS = {
+  username: 'schooladmin1',
   password: DEFAULT_PASSWORD,
   needsPasswordReset: true,
-})
+}
 
-export const DEFAULT_CREDENTIALS = createDefaultCredential('schooladmin1')
-export const SECONDARY_DEFAULT_CREDENTIALS = createDefaultCredential('schooladmin2')
-export const TERTIARY_DEFAULT_CREDENTIALS = createDefaultCredential('schooladmin3')
-export const QUATERNARY_DEFAULT_CREDENTIALS = createDefaultCredential('schooladmin4')
-export const QUINARY_DEFAULT_CREDENTIALS = createDefaultCredential('schooladmin5')
-export const SIXTH_DEFAULT_CREDENTIALS = createDefaultCredential('schooladmin6')
-export const SEVENTH_DEFAULT_CREDENTIALS = createDefaultCredential('schooladmin7')
-export const EIGHTH_DEFAULT_CREDENTIALS = createDefaultCredential('schooladmin8')
-export const NINTH_DEFAULT_CREDENTIALS = createDefaultCredential('schooladmin9')
-export const TENTH_DEFAULT_CREDENTIALS = createDefaultCredential('schooladmin10')
-export const ELEVENTH_DEFAULT_CREDENTIALS = createDefaultCredential('schooladmin11')
-export const TWELFTH_DEFAULT_CREDENTIALS = createDefaultCredential('schooladmin12')
-export const THIRTEENTH_DEFAULT_CREDENTIALS = createDefaultCredential('schooladmin13')
-export const FOURTEENTH_DEFAULT_CREDENTIALS = createDefaultCredential('schooladmin14')
-export const FIFTEENTH_DEFAULT_CREDENTIALS = createDefaultCredential('schooladmin15')
+export const SECONDARY_DEFAULT_CREDENTIALS = {
+  username: 'schooladmin2',
+  password: DEFAULT_PASSWORD,
+  needsPasswordReset: true,
+}
+
+export const TERTIARY_DEFAULT_CREDENTIALS = {
+  username: 'schooladmin3',
+  password: DEFAULT_PASSWORD,
+  needsPasswordReset: true,
+}
+
+export const QUATERNARY_DEFAULT_CREDENTIALS = {
+  username: 'schooladmin4',
+  password: DEFAULT_PASSWORD,
+  needsPasswordReset: true,
+}
+
+export const QUINARY_DEFAULT_CREDENTIALS = {
+  username: 'schooladmin5',
+  password: DEFAULT_PASSWORD,
+  needsPasswordReset: true,
+}
 
 export const DUMMY_RESET_CREDENTIALS = [
   DEFAULT_CREDENTIALS,
@@ -30,16 +38,6 @@ export const DUMMY_RESET_CREDENTIALS = [
   TERTIARY_DEFAULT_CREDENTIALS,
   QUATERNARY_DEFAULT_CREDENTIALS,
   QUINARY_DEFAULT_CREDENTIALS,
-  SIXTH_DEFAULT_CREDENTIALS,
-  SEVENTH_DEFAULT_CREDENTIALS,
-  EIGHTH_DEFAULT_CREDENTIALS,
-  NINTH_DEFAULT_CREDENTIALS,
-  TENTH_DEFAULT_CREDENTIALS,
-  ELEVENTH_DEFAULT_CREDENTIALS,
-  TWELFTH_DEFAULT_CREDENTIALS,
-  THIRTEENTH_DEFAULT_CREDENTIALS,
-  FOURTEENTH_DEFAULT_CREDENTIALS,
-  FIFTEENTH_DEFAULT_CREDENTIALS,
 ]
 
 export const getStoredCredentials = () => {

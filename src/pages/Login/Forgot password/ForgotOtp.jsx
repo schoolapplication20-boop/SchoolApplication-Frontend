@@ -9,38 +9,22 @@ const ForgotOtp = () => {
   const location = useLocation()
   const mobileNumber = location.state?.mobileNumber || ''
   const email = location.state?.email || ''
-  const identifier = (location.state?.identifier || mobileNumber || email || '').toLowerCase()
+  const identifier = mobileNumber || email
 
   const [otp, setOtp] = useState(['', '', '', ''])
   const [error, setError] = useState('')
-  const [otpSecondsLeft, setOtpSecondsLeft] = useState(OTP_VALIDITY_SECONDS)
   const otpRefs = [useRef(), useRef(), useRef(), useRef()]
 
   const DUMMY_OTP = '1234'
-  const isOtpExpired = otpSecondsLeft === 0
-
-  useEffect(() => {
-    if (otpSecondsLeft <= 0) return undefined
-
-    const intervalId = setInterval(() => {
-      setOtpSecondsLeft((prev) => (prev > 0 ? prev - 1 : 0))
-    }, 1000)
-
-    return () => clearInterval(intervalId)
-  }, [otpSecondsLeft])
-
-  const formatOtpTime = (seconds) => {
-    const mm = String(Math.floor(seconds / 60)).padStart(2, '0')
-    const ss = String(seconds % 60).padStart(2, '0')
-    return `${mm}:${ss}`
-  }
 
   const handleOtpChange = (index, value) => {
     if (!/^\d*$/.test(value)) return
+
     const newOtp = [...otp]
     newOtp[index] = value.slice(0, 1)
     setOtp(newOtp)
     setError('')
+
     if (value && index < 3) otpRefs[index + 1].current.focus()
   }
 
@@ -55,7 +39,6 @@ const ForgotOtp = () => {
 
     setOtp(['', '', '', ''])
     setError('')
-    setOtpSecondsLeft(OTP_VALIDITY_SECONDS)
     otpRefs[0].current.focus()
     alert(`New OTP sent successfully (Dummy OTP: ${DUMMY_OTP})`)
   }
@@ -67,14 +50,20 @@ const ForgotOtp = () => {
     }
 
     const enteredOtp = otp.join('')
+
     if (!enteredOtp || enteredOtp.length !== 4) {
       setError('Please enter all 4 digits')
       return
     }
 
+    if (isOtpExpired) {
+      setError('OTP expired. Please resend OTP.')
+      return
+    }
+
     if (enteredOtp === DUMMY_OTP) {
       alert('OTP Verified Successfully')
-      navigate('/change-password', { state: { mobileNumber, email, identifier } })
+      navigate('/reset-password', { state: { mobileNumber, email, identifier } })
     } else {
       setError('Invalid OTP. Please try again.')
       setOtp(['', '', '', ''])
@@ -112,8 +101,7 @@ const ForgotOtp = () => {
             </div>
 
             <h3 className="mb-2 text-center">Enter OTP</h3>
-            <p className="text-muted text-center mb-1">Please Enter Your OTP To Continue</p>
-            {identifier && <p className="text-muted text-center small mb-4">Sent to: {identifier}</p>}
+            <p className="text-muted text-center mb-4">Please Enter Your OTP To Continue</p>
 
             <div className="otp-input-container d-flex justify-content-center gap-3 mb-4">
               {otp.map((digit, index) => (
@@ -135,12 +123,9 @@ const ForgotOtp = () => {
             {error && <div className="alert alert-danger text-center mb-3">{error}</div>}
 
             <div className="text-center mb-4">
-              <button className="btn btn-link p-0 resend-otp-btn" onClick={handleResendOtp} disabled={!isOtpExpired}>
+              <button className="btn btn-link p-0 resend-otp-btn" onClick={handleResendOtp}>
                 Resend OTP
               </button>
-              <div className="otp-expiry-text mt-1">
-                {isOtpExpired ? 'OTP expired. Click Resend OTP to get a new code.' : `OTP expires in ${formatOtpTime(otpSecondsLeft)}`}
-              </div>
             </div>
 
             <button className="btn verify-otp-btn btn-lg w-100" onClick={handleVerifyOtp}>
