@@ -21,6 +21,7 @@ import {
   markTeacherProfileCompleted,
 } from '../../utils/adminSetupStorage'
 import { getStoredCredentials } from '../../utils/authStorage'
+import { cities } from '../../utils/locationOptions'
 
 const TEACHER_PROFILE_STORAGE_KEY = 'schoolers_teacher_profile_form'
 
@@ -64,176 +65,6 @@ const states = [
   'Puducherry',
 ]
 
-const cities = Array.from(
-  new Set([
-    'Agartala',
-    'Agra',
-    'Ahmedabad',
-    'Aizawl',
-    'Ajmer',
-    'Alappuzha',
-    'Alwar',
-    'Amaravati',
-    'Ambala',
-    'Amritsar',
-    'Anantnag',
-    'Asansol',
-    'Aurangabad',
-    'Baramulla',
-    'Bathinda',
-    'Belagavi',
-    'Bengaluru',
-    'Berhampur',
-    'Bhagalpur',
-    'Bhavnagar',
-    'Bhilai',
-    'Bhopal',
-    'Bikaner',
-    'Bilaspur',
-    'Bishnupur',
-    'Bokaro',
-    'Chandigarh',
-    'Champhai',
-    'Chennai',
-    'Coimbatore',
-    'Cuttack',
-    'Dadra',
-    'Daman',
-    'Davanagere',
-    'Dehradun',
-    'Delhi',
-    'Dhanbad',
-    'Dharmanagar',
-    'Dharamshala',
-    'Dibrugarh',
-    'Dimapur',
-    'Diu',
-    'Dispur',
-    'Durg',
-    'Durgapur',
-    'Erode',
-    'Faridabad',
-    'Gandhinagar',
-    'Gangtok',
-    'Gaya',
-    'Ghaziabad',
-    'Gorakhpur',
-    'Guntur',
-    'Gurugram',
-    'Guwahati',
-    'Gwalior',
-    'Gyalshing',
-    'Haldwani',
-    'Haridwar',
-    'Hazaribagh',
-    'Hisar',
-    'Howrah',
-    'Hubballi',
-    'Hyderabad',
-    'Imphal',
-    'Indore',
-    'Itanagar',
-    'Jabalpur',
-    'Jaipur',
-    'Jalandhar',
-    'Jammu',
-    'Jamnagar',
-    'Jamshedpur',
-    'Jhansi',
-    'Jodhpur',
-    'Jorhat',
-    'Jowai',
-    'Karaikal',
-    'Kargil',
-    'Karimnagar',
-    'Karnal',
-    'Kavaratti',
-    'Khammam',
-    'Kharagpur',
-    'Kochi',
-    'Kohima',
-    'Kolkata',
-    'Kollam',
-    'Korba',
-    'Kota',
-    'Kottayam',
-    'Kozhikode',
-    'Kurnool',
-    'Leh',
-    'Ludhiana',
-    'Lunglei',
-    'Lucknow',
-    'Madurai',
-    'Mahe',
-    'Mandi',
-    'Mangaluru',
-    'Mapusa',
-    'Margao',
-    'Meerut',
-    'Mohali',
-    'Mokokchung',
-    'Muzaffarpur',
-    'Mumbai',
-    'Mysuru',
-    'Naharlagun',
-    'Nalgonda',
-    'Namchi',
-    'Nashik',
-    'Navi Mumbai',
-    'New Delhi',
-    'Nizamabad',
-    'Noida',
-    'Panaji',
-    'Panipat',
-    'Pasighat',
-    'Patiala',
-    'Patna',
-    'Port Blair',
-    'Prayagraj',
-    'Puducherry',
-    'Pune',
-    'Puri',
-    'Raipur',
-    'Rajahmundry',
-    'Rajkot',
-    'Ranchi',
-    'Roorkee',
-    'Rourkela',
-    'Rudrapur',
-    'Sagar',
-    'Salem',
-    'Sambalpur',
-    'Shillong',
-    'Shimla',
-    'Shivamogga',
-    'Silchar',
-    'Siliguri',
-    'Silvassa',
-    'Solan',
-    'Solapur',
-    'Srinagar',
-    'Surat',
-    'Thane',
-    'Thanjavur',
-    'Thiruvananthapuram',
-    'Thoubal',
-    'Thrissur',
-    'Tiruchirappalli',
-    'Tirunelveli',
-    'Tirupati',
-    'Tura',
-    'Udaipur',
-    'Ujjain',
-    'Vadodara',
-    'Varanasi',
-    'Vasco da Gama',
-    'Vellore',
-    'Vijayawada',
-    'Visakhapatnam',
-    'Warangal',
-    'Yanam',
-  ]),
-).sort((a, b) => a.localeCompare(b))
 const qualifications = ['Primary', 'Secondary', 'Higher Secondary']
 const subjectOptions = ['Telugu','English', 'Maths', 'Physics', 'Chemistry', 'Biology', 'History', 'Geography', 'Hindi']
 const sanitizeExperienceDigits = (value) => String(value ?? '').replace(/\D/g, '').slice(0, 2)
@@ -370,6 +201,8 @@ const Teachersprofile = () => {
   const [statusMessage, setStatusMessage] = useState(initialPageState.statusMessage)
   const [errorMessage, setErrorMessage] = useState(initialPageState.errorMessage)
   const [showSuccessPopup, setShowSuccessPopup] = useState(false)
+  const [touchedFields, setTouchedFields] = useState({})
+  const [hasSubmitted, setHasSubmitted] = useState(false)
   const selectedSubjects = Array.isArray(formData.subjectsTaught) ? formData.subjectsTaught : []
   const subjectExperiences = formData.subjectExperiences && typeof formData.subjectExperiences === 'object' ? formData.subjectExperiences : {}
   const totalSubjectExperienceYears = selectedSubjects.reduce(
@@ -429,11 +262,32 @@ const Teachersprofile = () => {
       fieldErrors,
     }
   })()
-  const hasFieldError = (key) => Boolean(teacherValidation.fieldErrors[key])
-  const getFieldProps = (key) => ({
-    className: hasFieldError(key) ? 'field-invalid' : '',
-    'aria-invalid': hasFieldError(key) ? 'true' : 'false',
-  })
+  const markTouched = (key) => {
+    if (!key) return
+    setTouchedFields((prev) => (prev[key] ? prev : { ...prev, [key]: true }))
+  }
+  const shouldShowError = (key) => Boolean(teacherValidation.fieldErrors?.[key]) && (touchedFields[key] || hasSubmitted)
+  const getFieldErrorId = (key) => `teacher-error-${key}`
+  const hasFieldError = (key) => shouldShowError(key)
+  const getFieldProps = (key, extraClass = '') => {
+    const showError = shouldShowError(key)
+    return {
+      className: [extraClass, showError ? 'field-invalid' : ''].filter(Boolean).join(' '),
+      'aria-invalid': showError ? 'true' : 'false',
+      'aria-describedby': showError ? getFieldErrorId(key) : undefined,
+      onBlur: () => markTouched(key),
+    }
+  }
+  const renderFieldError = (key, extraClass = '') => {
+    if (!key || !shouldShowError(key)) return null
+    const className = ['field-error', extraClass].filter(Boolean).join(' ')
+    return (
+      <div className={className} id={getFieldErrorId(key)} role="alert">
+        <WarningAmberRoundedIcon fontSize="small" />
+        <span>{teacherValidation.fieldErrors[key]}</span>
+      </div>
+    )
+  }
   const getCurrentUserKey = () => getActiveLoginUser() || (getStoredCredentials().username || '').trim().toLowerCase()
 
   useEffect(() => {
@@ -502,6 +356,19 @@ const Teachersprofile = () => {
     setStatusMessage('')
   }
 
+  const removeExperience = (id) => {
+    if (!isEditing) return
+    setFormData((prev) => {
+      const remaining = prev.previousExperiences.filter((experience) => experience.id !== id)
+      return {
+        ...prev,
+        previousExperiences: remaining.length ? remaining : [createPreviousExperience(1)],
+      }
+    })
+    setErrorMessage('')
+    setStatusMessage('')
+  }
+
   const handleEnableEdit = () => {
     setIsEditing(true)
     setShowSuccessPopup(false)
@@ -511,6 +378,7 @@ const Teachersprofile = () => {
 
   const setSubjectSelection = (subject, checked) => {
     if (!isEditing) return
+    markTouched('subjectsTaught')
     setFormData((prev) => {
       const currentSubjects = Array.isArray(prev.subjectsTaught) ? prev.subjectsTaught : []
       const nextSubjects = checked
@@ -543,6 +411,7 @@ const Teachersprofile = () => {
 
   const clearSelectedSubjects = () => {
     if (!isEditing) return
+    markTouched('subjectsTaught')
     setFormData((prev) => ({ ...prev, subjectsTaught: [], subjectExperiences: {}, experienceYears: '', experienceTrack: '' }))
     setErrorMessage('')
     setStatusMessage('')
@@ -579,6 +448,7 @@ const Teachersprofile = () => {
   }
 
   const handleSave = () => {
+    setHasSubmitted(true)
     if (!teacherValidation.isValid) {
       setErrorMessage(FORM_INVALID_MESSAGE)
       setStatusMessage('')
@@ -665,49 +535,61 @@ const Teachersprofile = () => {
 
           <div className="profile-info-layout">
             <div className="profile-top-grid">
-              <label className="profile-field-row">
+              <label className="profile-field-row required">
                 <span>Teacher ID</span>
-                <input
-                  {...getFieldProps('teacherId')}
-                  value={formData.teacherId}
-                  onChange={(event) => setField('teacherId', event.target.value)}
-                  placeholder="Enter ID"
-                  disabled={!isEditing}
-                />
+                <div className="field-stack">
+                  <input
+                    {...getFieldProps('teacherId')}
+                    value={formData.teacherId}
+                    onChange={(event) => setField('teacherId', event.target.value)}
+                    placeholder="Enter ID"
+                    disabled={!isEditing}
+                  />
+                  {renderFieldError('teacherId')}
+                </div>
               </label>
 
-              <label className="profile-field-row">
+              <label className="profile-field-row required">
                 <span>FullName</span>
-                <input
-                  {...getFieldProps('fullName')}
-                  value={formData.fullName}
-                  onChange={(event) => setField('fullName', event.target.value)}
-                  placeholder="Enter FullName"
-                  disabled={!isEditing}
-                />
+                <div className="field-stack">
+                  <input
+                    {...getFieldProps('fullName')}
+                    value={formData.fullName}
+                    onChange={(event) => setField('fullName', event.target.value)}
+                    placeholder="Enter FullName"
+                    disabled={!isEditing}
+                  />
+                  {renderFieldError('fullName')}
+                </div>
               </label>
 
-              <label className="profile-field-row">
+              <label className="profile-field-row required">
                 <span>Staff ID</span>
-                <input
-                  {...getFieldProps('staffId')}
-                  value={formData.staffId}
-                  onChange={(event) => setField('staffId', event.target.value)}
-                  placeholder="Enter ID"
-                  disabled={!isEditing}
-                />
+                <div className="field-stack">
+                  <input
+                    {...getFieldProps('staffId')}
+                    value={formData.staffId}
+                    onChange={(event) => setField('staffId', event.target.value)}
+                    placeholder="Enter ID"
+                    disabled={!isEditing}
+                  />
+                  {renderFieldError('staffId')}
+                </div>
               </label>
 
-              <label className="profile-field-row">
+              <label className="profile-field-row required">
                 <span>Gender</span>
-                <select {...getFieldProps('gender')} value={formData.gender} onChange={(event) => setField('gender', event.target.value)} disabled={!isEditing}>
-                  <option value="">Enter Gender</option>
-                  {genders.map((gender) => (
-                    <option key={gender} value={gender}>
-                      {gender}
-                    </option>
-                  ))}
-                </select>
+                <div className="field-stack">
+                  <select {...getFieldProps('gender')} value={formData.gender} onChange={(event) => setField('gender', event.target.value)} disabled={!isEditing}>
+                    <option value="">Enter Gender</option>
+                    {genders.map((gender) => (
+                      <option key={gender} value={gender}>
+                        {gender}
+                      </option>
+                    ))}
+                  </select>
+                  {renderFieldError('gender')}
+                </div>
               </label>
             </div>
 
@@ -742,68 +624,86 @@ const Teachersprofile = () => {
               </h2>
 
               <label className="teacher-field-label required">Mobile No.</label>
-              <input
-                {...getFieldProps('mobileNo')}
-                value={formData.mobileNo}
-                onChange={(event) => setField('mobileNo', event.target.value.replace(/\D/g, '').slice(0, 10))}
-                placeholder="Enter Mobile Number"
-                disabled={!isEditing}
-                inputMode="numeric"
-              />
+              <div className="field-stack">
+                <input
+                  {...getFieldProps('mobileNo')}
+                  value={formData.mobileNo}
+                  onChange={(event) => setField('mobileNo', event.target.value.replace(/\D/g, '').slice(0, 10))}
+                  placeholder="Enter Mobile Number"
+                  disabled={!isEditing}
+                  inputMode="numeric"
+                />
+                {renderFieldError('mobileNo')}
+              </div>
 
               <label className="teacher-field-label required">Email ID</label>
-              <input
-                {...getFieldProps('emailId')}
-                value={formData.emailId}
-                onChange={(event) => setField('emailId', event.target.value)}
-                placeholder="Enter Email ID"
-                disabled={!isEditing}
-              />
+              <div className="field-stack">
+                <input
+                  {...getFieldProps('emailId')}
+                  value={formData.emailId}
+                  onChange={(event) => setField('emailId', event.target.value)}
+                  placeholder="Enter Email ID"
+                  disabled={!isEditing}
+                />
+                {renderFieldError('emailId')}
+              </div>
 
               <label className="teacher-field-label">Address</label>
-              <input
-                {...getFieldProps('address')}
-                value={formData.address}
-                onChange={(event) => setField('address', event.target.value)}
-                placeholder="Enter Address"
-                disabled={!isEditing}
-              />
+              <div className="field-stack">
+                <input
+                  {...getFieldProps('address')}
+                  value={formData.address}
+                  onChange={(event) => setField('address', event.target.value)}
+                  placeholder="Enter Address"
+                  disabled={!isEditing}
+                />
+                {renderFieldError('address')}
+              </div>
 
               <div className="two-field-row">
                 <div>
                   <label className="teacher-field-label required">City</label>
-                  <select {...getFieldProps('city')} value={formData.city} onChange={(event) => setField('city', event.target.value)} disabled={!isEditing}>
-                    <option value="">Enter City</option>
-                    {cities.map((city) => (
-                      <option key={city} value={city}>
-                        {city}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="field-stack">
+                    <select {...getFieldProps('city')} value={formData.city} onChange={(event) => setField('city', event.target.value)} disabled={!isEditing}>
+                      <option value="">Enter City</option>
+                      {cities.map((city) => (
+                        <option key={city} value={city}>
+                          {city}
+                        </option>
+                      ))}
+                    </select>
+                    {renderFieldError('city')}
+                  </div>
                 </div>
 
                 <div>
                   <label className="teacher-field-label required">State</label>
-                  <select {...getFieldProps('state')} value={formData.state} onChange={(event) => setField('state', event.target.value)} disabled={!isEditing}>
-                    <option value="">Enter State</option>
-                    {states.map((state) => (
-                      <option key={state} value={state}>
-                        {state}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="field-stack">
+                    <select {...getFieldProps('state')} value={formData.state} onChange={(event) => setField('state', event.target.value)} disabled={!isEditing}>
+                      <option value="">Enter State</option>
+                      {states.map((state) => (
+                        <option key={state} value={state}>
+                          {state}
+                        </option>
+                      ))}
+                    </select>
+                    {renderFieldError('state')}
+                  </div>
                 </div>
               </div>
 
               <label className="teacher-field-label">Pincode</label>
-              <input
-                {...getFieldProps('pincode')}
-                value={formData.pincode}
-                onChange={(event) => setField('pincode', event.target.value.replace(/\D/g, '').slice(0, 6))}
-                placeholder="Enter Pincode"
-                disabled={!isEditing}
-                inputMode="numeric"
-              />
+              <div className="field-stack">
+                <input
+                  {...getFieldProps('pincode')}
+                  value={formData.pincode}
+                  onChange={(event) => setField('pincode', event.target.value.replace(/\D/g, '').slice(0, 6))}
+                  placeholder="Enter Pincode"
+                  disabled={!isEditing}
+                  inputMode="numeric"
+                />
+                {renderFieldError('pincode')}
+              </div>
             </section>
 
             <section className="teacher-card">
@@ -814,7 +714,21 @@ const Teachersprofile = () => {
 
               {formData.previousExperiences.map((experience, index) => (
                 <div key={experience.id} className={`previous-experience-block ${index > 0 ? 'with-divider' : ''}`}>
-                  {index > 0 ? <p className="experience-index">Experience {index + 1}</p> : null}
+                  <div className="experience-block-header">
+                    <p className="experience-index">Experience {index + 1}</p>
+                    {formData.previousExperiences.length > 1 ? (
+                      <button
+                        type="button"
+                        className="experience-remove-btn"
+                        onClick={() => removeExperience(experience.id)}
+                        aria-label={`Delete experience ${index + 1}`}
+                        disabled={!isEditing}
+                      >
+                        <CloseRoundedIcon fontSize="small" />
+                        <span>Delete</span>
+                      </button>
+                    ) : null}
+                  </div>
 
                   <label className="teacher-field-label">Previous School Name</label>
                   <input
@@ -871,18 +785,21 @@ const Teachersprofile = () => {
               </h2>
 
               <label className="teacher-field-label">Qualification B.Ed</label>
-              <select
-                {...getFieldProps('qualification')}
-                value={formData.qualification}
-                onChange={(event) => setField('qualification', event.target.value)}
-                disabled={!isEditing}
-              >
-                {qualifications.map((qualification) => (
-                  <option key={qualification} value={qualification}>
-                    {qualification}
-                  </option>
-                ))}
-              </select>
+              <div className="field-stack">
+                <select
+                  {...getFieldProps('qualification')}
+                  value={formData.qualification}
+                  onChange={(event) => setField('qualification', event.target.value)}
+                  disabled={!isEditing}
+                >
+                  {qualifications.map((qualification) => (
+                    <option key={qualification} value={qualification}>
+                      {qualification}
+                    </option>
+                  ))}
+                </select>
+                {renderFieldError('qualification')}
+              </div>
 
               <label className="teacher-field-label">Subjects Taught</label>
               <div className={`subjects-checkbox-grid ${hasFieldError('subjectsTaught') ? 'subjects-invalid' : ''}`}>
@@ -898,6 +815,7 @@ const Teachersprofile = () => {
                   </label>
                 ))}
               </div>
+              {renderFieldError('subjectsTaught')}
 
               <div className="selected-subjects-summary">
                 <input value={selectedSubjectsText} readOnly placeholder="Select subjects from the checkboxes" />
@@ -920,15 +838,17 @@ const Teachersprofile = () => {
                   {selectedSubjects.map((subject) => (
                     <div key={subject} className="experience-subject-row">
                       <span className="experience-subject-name">{subject}</span>
-                      <input
-                        className={`experience-years-input ${hasFieldError(`subjectExperience:${subject}`) ? 'field-invalid' : ''}`}
-                        aria-invalid={hasFieldError(`subjectExperience:${subject}`) ? 'true' : 'false'}
-                        value={subjectExperiences[subject] || ''}
-                        onChange={(event) => setSubjectExperienceYears(subject, event.target.value)}
-                        placeholder="Years"
-                        inputMode="numeric"
-                        disabled={!isEditing}
-                      />
+                      <div className="field-stack">
+                        <input
+                          {...getFieldProps(`subjectExperience:${subject}`, 'experience-years-input')}
+                          value={subjectExperiences[subject] || ''}
+                          onChange={(event) => setSubjectExperienceYears(subject, event.target.value)}
+                          placeholder="Years"
+                          inputMode="numeric"
+                          disabled={!isEditing}
+                        />
+                        {renderFieldError(`subjectExperience:${subject}`, 'compact')}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -940,22 +860,28 @@ const Teachersprofile = () => {
                 <CalendarTodayOutlinedIcon fontSize="inherit" />
               </label>
               <div className="date-range-row">
-                <input
-                  {...getFieldProps('joiningDate')}
-                  type="date"
-                  value={formData.joiningDate}
-                  onChange={(event) => setField('joiningDate', event.target.value)}
-                  disabled={!isEditing}
-                />
-                <input
-                  {...getFieldProps('joiningAcademicYear')}
-                  type="text"
-                  value={formData.joiningAcademicYear}
-                  onChange={(event) => setField('joiningAcademicYear', event.target.value.replace(/\D/g, '').slice(0, 4))}
-                  placeholder="2024"
-                  inputMode="numeric"
-                  disabled={!isEditing}
-                />
+                <div className="field-stack">
+                  <input
+                    {...getFieldProps('joiningDate')}
+                    type="date"
+                    value={formData.joiningDate}
+                    onChange={(event) => setField('joiningDate', event.target.value)}
+                    disabled={!isEditing}
+                  />
+                  {renderFieldError('joiningDate')}
+                </div>
+                <div className="field-stack">
+                  <input
+                    {...getFieldProps('joiningAcademicYear')}
+                    type="text"
+                    value={formData.joiningAcademicYear}
+                    onChange={(event) => setField('joiningAcademicYear', event.target.value.replace(/\D/g, '').slice(0, 4))}
+                    placeholder="2024"
+                    inputMode="numeric"
+                    disabled={!isEditing}
+                  />
+                  {renderFieldError('joiningAcademicYear')}
+                </div>
               </div>
             </section>
 
@@ -965,14 +891,17 @@ const Teachersprofile = () => {
                 <span>Identity &amp; Documents</span>
               </h2>
 
-              <label className="teacher-field-label">Aadhar / ID Proof</label>
-              <input
-                {...getFieldProps('aadhaarId')}
-                value={formData.aadhaarId}
-                onChange={(event) => setField('aadhaarId', event.target.value)}
-                placeholder="1234-5678-XXXX"
-                disabled={!isEditing}
-              />
+              <label className="teacher-field-label required">Aadhar / ID Proof</label>
+              <div className="field-stack">
+                <input
+                  {...getFieldProps('aadhaarId')}
+                  value={formData.aadhaarId}
+                  onChange={(event) => setField('aadhaarId', event.target.value)}
+                  placeholder="1234-5678-XXXX"
+                  disabled={!isEditing}
+                />
+                {renderFieldError('aadhaarId')}
+              </div>
 
               <label className={`teacher-file-row ${isEditing ? 'editable' : ''}`}>
                 <div className="teacher-file-row-left">

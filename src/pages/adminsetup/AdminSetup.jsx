@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { createContext, useContext, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import SchoolOutlinedIcon from '@mui/icons-material/SchoolOutlined'
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined'
@@ -9,6 +9,7 @@ import WarningAmberRoundedIcon from '@mui/icons-material/WarningAmberRounded'
 import './AdminSetup.css'
 import { saveSchoolSetupData, getActiveLoginUser, getPostLoginRoute } from '../../utils/adminSetupStorage'
 import { getStoredCredentials } from '../../utils/authStorage'
+import { cities, countries } from '../../utils/locationOptions'
 
 const currentYear = new Date().getFullYear()
 const yearOptions = Array.from({ length: 80 }, (_, index) => String(currentYear - index))
@@ -103,6 +104,8 @@ const schoolTimingOptions = [
   '08:30 AM - 03:00 PM',
   '09:00 AM - 03:30 PM',
   '09:00 AM - 04:00 PM',
+  '09:00 AM - 05:00 PM',
+  '09:00 AM - 06:00 PM'
 ]
 const bankBranchOptions = [
   { id: 'sbi-hyd-abids', bank: 'State Bank of India', branch: 'Abids, Hyderabad', ifsc: 'SBIN0000802' },
@@ -117,6 +120,25 @@ const bankBranchOptions = [
   { id: 'canara-tirupati-main', bank: 'Canara Bank', branch: 'Main Branch, Tirupati', ifsc: 'CNRB0000808' },
 ]
 
+const FieldRowContext = createContext({
+  getFieldId: () => undefined,
+  renderFieldError: () => null,
+})
+
+const FieldRow = ({ label, errorKey, children }) => {
+  const { getFieldId, renderFieldError } = useContext(FieldRowContext)
+  const fieldId = errorKey ? getFieldId(errorKey) : undefined
+  return (
+    <div className="form-field">
+      <label className="field-label" htmlFor={fieldId}>{label}</label>
+      <div className="field-control">
+        {children}
+        {renderFieldError(errorKey)}
+      </div>
+    </div>
+  )
+}
+
 const AdminSetup = () => {
   const FORM_INVALID_MESSAGE = 'Fill the details properly'
   const navigate = useNavigate()
@@ -130,15 +152,17 @@ const AdminSetup = () => {
   const [error, setError] = useState('')
   const [showSuccessPopup, setShowSuccessPopup] = useState(false)
   const [nextRouteAfterSave, setNextRouteAfterSave] = useState('/teachers-profile')
-  const hasFieldError = (key) => Boolean(formValidation.fieldErrors?.[key])
-  const getFieldProps = (key) => ({
-    className: hasFieldError(key) ? 'field-invalid' : '',
-    'aria-invalid': hasFieldError(key) ? 'true' : 'false',
-  })
+  const [touchedFields, setTouchedFields] = useState({})
+  const [hasSubmitted, setHasSubmitted] = useState(false)
 
   const setField = (key, value) => {
     setFormData((prev) => ({ ...prev, [key]: value }))
     setError('')
+  }
+
+  const markTouched = (key) => {
+    if (!key) return
+    setTouchedFields((prev) => (prev[key] ? prev : { ...prev, [key]: true }))
   }
 
   const handleBankBranchChange = (value) => {
@@ -148,6 +172,7 @@ const AdminSetup = () => {
       bankBranch: value,
       ifscCode: selectedBankBranch?.ifsc || '',
     }))
+    markTouched('bankBranch')
     setError('')
   }
 
@@ -165,6 +190,7 @@ const AdminSetup = () => {
     const file = event.target.files?.[0]
     if (!file) return
 
+    markTouched('logoDataUrl')
     const reader = new FileReader()
     reader.onload = () => {
       setFormData((prev) => ({
@@ -200,6 +226,7 @@ const AdminSetup = () => {
     const schoolTimings = (formData.schoolTimings || '').trim()
     const language = (formData.language || '').trim()
     const timeZone = (formData.timeZone || '').trim()
+    const currency = (formData.currency || '').trim()
     const bankBranch = (formData.bankBranch || '').trim()
     const accountNumber = (formData.accountNumber || '').replace(/\D/g, '')
     const ifscCode = (formData.ifscCode || '').trim().toUpperCase()
@@ -229,6 +256,7 @@ const AdminSetup = () => {
     if (!schoolTimings) missingFieldErrors.schoolTimings = 'School Timings are required'
     if (!language) missingFieldErrors.language = 'Language is required'
     if (!timeZone) missingFieldErrors.timeZone = 'Time Zone is required'
+    if (!currency) missingFieldErrors.currency = 'Currency is required'
     if (!bankBranch) missingFieldErrors.bankBranch = 'Bank & Branch is required'
     if (!accountNumber) missingFieldErrors.accountNumber = 'Account Number is required'
     if (!ifscCode) missingFieldErrors.ifscCode = 'IFSC Code is required'
@@ -291,6 +319,7 @@ const AdminSetup = () => {
         schoolTimings,
         language,
         timeZone,
+        currency,
         bankBranch,
         accountNumber,
         ifscCode,
@@ -301,7 +330,38 @@ const AdminSetup = () => {
     }
   })()
 
+  const getFieldId = (key) => `setup-field-${key}`
+
+  const shouldShowError = (key) => Boolean(formValidation.fieldErrors?.[key]) && (touchedFields[key] || hasSubmitted)
+
+  const getFieldErrorId = (key) => `setup-error-${key}`
+
+  const getFieldProps = (key) => {
+    const showError = shouldShowError(key)
+    return {
+      id: getFieldId(key),
+      className: showError ? 'field-invalid' : '',
+      'aria-invalid': showError ? 'true' : 'false',
+      'aria-describedby': showError ? getFieldErrorId(key) : undefined,
+      onBlur: () => markTouched(key),
+    }
+  }
+
+  const renderFieldError = (key, extraClass = '') => {
+    if (!key || !shouldShowError(key)) return null
+    const className = ['field-error', extraClass].filter(Boolean).join(' ')
+    return (
+      <div className={className} id={getFieldErrorId(key)} role="alert">
+        <WarningAmberRoundedIcon fontSize="small" />
+        <span>{formValidation.fieldErrors[key]}</span>
+      </div>
+    )
+  }
+
+  const hasVisibleErrors = Object.keys(formValidation.fieldErrors || {}).some((key) => shouldShowError(key))
+
   const handleSave = () => {
+    setHasSubmitted(true)
     if (!formValidation.isValid) {
       setError(FORM_INVALID_MESSAGE)
       return
@@ -323,6 +383,13 @@ const AdminSetup = () => {
     setShowSuccessPopup(true)
   }
 
+  const handleAdminJump = () => {
+    const section = document.getElementById('admin-details')
+    if (section) {
+      section.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }
+
   useEffect(() => {
     if (!showSuccessPopup) return undefined
     const timer = setTimeout(() => {
@@ -332,53 +399,60 @@ const AdminSetup = () => {
   }, [navigate, showSuccessPopup, nextRouteAfterSave])
 
   return (
-    <div className="admin-setup-page">
-      <div className="admin-setup-shell">
+    <FieldRowContext.Provider value={{ getFieldId, renderFieldError }}>
+      <div className="admin-setup-page">
+        <div className="admin-setup-shell">
         <header className="setup-header">
           <div>
             <h1>Setup School</h1>
             <p>Enter your school information to get started</p>
           </div>
-          <button type="button" className="save-btn" onClick={handleSave} disabled={!formValidation.isComplete}>Save</button>
+          <div className="setup-header-actions">
+            <button type="button" className="admin-btn" onClick={handleAdminJump}> Add Admin</button>
+            <button type="button" className="save-btn" onClick={handleSave} disabled={!formValidation.isComplete}>Save</button>
+          </div>
         </header>
 
-        {!formValidation.isValid ? (
+        {hasVisibleErrors ? (
           <div className="setup-validation-hint">
             <WarningAmberRoundedIcon fontSize="small" />
             <span>Please fill highlighted fields properly.</span>
           </div>
         ) : null}
 
-        <section className="setup-card">
+        <section className="setup-card" id="admin-details">
           <h2 className="section-title">
             <SchoolOutlinedIcon fontSize="small" />
             <span>School Information</span>
           </h2>
           <div className="school-grid">
             <div className="left-grid">
-              <label>School Name<input {...getFieldProps('schoolName')} value={formData.schoolName} onChange={(e) => setField('schoolName', e.target.value)} placeholder="Enter School Name" /></label>
-              <label>
-                School Type
+              <FieldRow label="School Name" errorKey="schoolName">
+                <input {...getFieldProps('schoolName')} value={formData.schoolName} onChange={(e) => setField('schoolName', e.target.value)} placeholder="Enter School Name" />
+              </FieldRow>
+              <FieldRow label="School Type" errorKey="schoolType">
                 <select {...getFieldProps('schoolType')} value={formData.schoolType} onChange={(e) => setField('schoolType', e.target.value)}>
                   <option value="">Select School Type</option>
                   {schoolTypeOptions.map((type) => <option key={type} value={type}>{type}</option>)}
                 </select>
-              </label>
-              <label>School Code/Reg No.<input {...getFieldProps('schoolCode')} value={formData.schoolCode} onChange={(e) => setField('schoolCode', e.target.value)} placeholder="Enter Code" /></label>
-              <label>
-                Established Year
+              </FieldRow>
+              <FieldRow label="School Code/Reg No." errorKey="schoolCode">
+                <input {...getFieldProps('schoolCode')} value={formData.schoolCode} onChange={(e) => setField('schoolCode', e.target.value)} placeholder="Enter Code" />
+              </FieldRow>
+              <FieldRow label="Established Year" errorKey="establishedYear">
                 <select {...getFieldProps('establishedYear')} value={formData.establishedYear} onChange={(e) => setField('establishedYear', e.target.value)}>
                   <option value="">Enter Year</option>
                   {yearOptions.map((year) => <option key={year} value={year}>{year}</option>)}
                 </select>
-              </label>
+              </FieldRow>
             </div>
 
-            <div className={`logo-box ${hasFieldError('logoDataUrl') ? 'field-invalid-box' : ''}`}>
+            <div className={`logo-box ${shouldShowError('logoDataUrl') ? 'field-invalid-box' : ''}`}>
               <h3>Upload Logo</h3>
               <div className="logo-preview">
                 {formData.logoDataUrl ? <img src={formData.logoDataUrl} alt="School Logo" /> : <span className="logo-placeholder">&uarr;</span>}
               </div>
+              {renderFieldError('logoDataUrl', 'logo-error')}
               <label className="upload-btn">
                 Upload
                 <input type="file" accept="image/*" onChange={handleLogoUpload} hidden />
@@ -395,22 +469,34 @@ const AdminSetup = () => {
           </h2>
           <div className="contact-details-stack">
             <div className="fields-grid one-col">
-              <label>Address<input {...getFieldProps('address')} value={formData.address} onChange={(e) => setField('address', e.target.value)} placeholder="Enter Address" /></label>
+              <FieldRow label="Address" errorKey="address">
+                <input {...getFieldProps('address')} value={formData.address} onChange={(e) => setField('address', e.target.value)} placeholder="Enter Address" />
+              </FieldRow>
             </div>
             <div className="fields-grid three-col">
-              <label>City<input {...getFieldProps('city')} value={formData.city} onChange={(e) => setField('city', e.target.value)} placeholder="Enter City" /></label>
-              <label>
-                State
+              <FieldRow label="City" errorKey="city">
+                <select {...getFieldProps('city')} value={formData.city} onChange={(e) => setField('city', e.target.value)}>
+                  <option value="">Enter City</option>
+                  {cities.map((city) => <option key={city} value={city}>{city}</option>)}
+                </select>
+              </FieldRow>
+              <FieldRow label="State" errorKey="state">
                 <select {...getFieldProps('state')} value={formData.state} onChange={(e) => setField('state', e.target.value)}>
                   {states.map((state) => <option key={state} value={state === '-State-' ? '' : state}>{state}</option>)}
                 </select>
-              </label>
-              <label>Pincode<input {...getFieldProps('pincode')} value={formData.pincode} onChange={(e) => setField('pincode', e.target.value)} placeholder="-Pincode-" /></label>
+              </FieldRow>
+              <FieldRow label="Pincode" errorKey="pincode">
+                <input {...getFieldProps('pincode')} value={formData.pincode} onChange={(e) => setField('pincode', e.target.value)} placeholder="-Pincode-" />
+              </FieldRow>
             </div>
             <div className="fields-grid one-col">
-              <label>Country<input {...getFieldProps('country')} value={formData.country} onChange={(e) => setField('country', e.target.value)} placeholder="Enter Country Name" /></label>
-              <label>
-                Phone Number
+              <FieldRow label="Country" errorKey="country">
+                <select {...getFieldProps('country')} value={formData.country} onChange={(e) => setField('country', e.target.value)}>
+                  <option value="">Enter Country</option>
+                  {countries.map((country) => <option key={country} value={country}>{country}</option>)}
+                </select>
+              </FieldRow>
+              <FieldRow label="Phone Number" errorKey="phoneNumber">
                 <input
                   {...getFieldProps('phoneNumber')}
                   value={formData.phoneNumber}
@@ -419,17 +505,18 @@ const AdminSetup = () => {
                   inputMode="numeric"
                   maxLength={10}
                 />
-              </label>
-              <label>
-                Email ID
+              </FieldRow>
+              <FieldRow label="Email ID" errorKey="emailId">
                 <input
                   {...getFieldProps('emailId')}
                   value={formData.emailId}
                   onChange={(e) => setField('emailId', e.target.value.replace(/\s/g, '').toLowerCase())}
                   placeholder="example@gmail.com"
                 />
-              </label>
-              <label>Website<input {...getFieldProps('website')} value={formData.website} onChange={(e) => setField('website', e.target.value)} placeholder="Enter URL" /></label>
+              </FieldRow>
+              <FieldRow label="Website" errorKey="website">
+                <input {...getFieldProps('website')} value={formData.website} onChange={(e) => setField('website', e.target.value)} placeholder="Enter URL" />
+              </FieldRow>
             </div>
           </div>
         </section>
@@ -440,40 +527,44 @@ const AdminSetup = () => {
             <span>Administration Details</span>
           </h2>
           <div className="fields-grid two-col">
-            <label>Principal Name<input {...getFieldProps('principalName')} value={formData.principalName} onChange={(e) => setField('principalName', e.target.value)} placeholder="Enter Principal Name" /></label>
-            <label>
-              Medium
+            <FieldRow label="Principal Name" errorKey="principalName">
+              <input {...getFieldProps('principalName')} value={formData.principalName} onChange={(e) => setField('principalName', e.target.value)} placeholder="Enter Principal Name" />
+            </FieldRow>
+            <FieldRow label="Medium" errorKey="medium">
               <select {...getFieldProps('medium')} value={formData.medium} onChange={(e) => setField('medium', e.target.value)}>
                 <option value="">Enter Medium</option>
                 {mediums.map((medium) => <option key={medium} value={medium}>{medium}</option>)}
               </select>
-            </label>
-            <label>Headmaster Name<input {...getFieldProps('headmasterName')} value={formData.headmasterName} onChange={(e) => setField('headmasterName', e.target.value)} placeholder="Enter HM Name" /></label>
-            <label>
-              Board
+            </FieldRow>
+            <FieldRow label="Headmaster Name" errorKey="headmasterName">
+              <input {...getFieldProps('headmasterName')} value={formData.headmasterName} onChange={(e) => setField('headmasterName', e.target.value)} placeholder="Enter HM Name" />
+            </FieldRow>
+            <FieldRow label="Board" errorKey="board">
               <select {...getFieldProps('board')} value={formData.board} onChange={(e) => setField('board', e.target.value)}>
                 <option value="">Enter Board</option>
                 {boards.map((board) => <option key={board} value={board}>{board}</option>)}
               </select>
-            </label>
-            <label>Authorized Person<input {...getFieldProps('authorizedPerson')} value={formData.authorizedPerson} onChange={(e) => setField('authorizedPerson', e.target.value)} placeholder="Enter Name" /></label>
-            <label>
-              Working Days
+            </FieldRow>
+            <FieldRow label="Authorized Person" errorKey="authorizedPerson">
+              <input {...getFieldProps('authorizedPerson')} value={formData.authorizedPerson} onChange={(e) => setField('authorizedPerson', e.target.value)} placeholder="Enter Name" />
+            </FieldRow>
+            <FieldRow label="Working Days" errorKey="workingDays">
               <select {...getFieldProps('workingDays')} value={formData.workingDays} onChange={(e) => setField('workingDays', e.target.value)}>
                 {workingDaysOptions.map((days) => <option key={days} value={days === '-None-' ? '' : days}>{days}</option>)}
               </select>
-            </label>
-              <label>Contact Number<input {...getFieldProps('contactNumber')} value={formData.contactNumber} onChange={(e) => setField('contactNumber', e.target.value)} placeholder="Enter Mobile No" /></label>
-              <label>
-                School Timings
-                <select {...getFieldProps('schoolTimings')} value={formData.schoolTimings} onChange={(e) => setField('schoolTimings', e.target.value)}>
-                  <option value="">Select School Timings</option>
-                  {formData.schoolTimings && !schoolTimingOptions.includes(formData.schoolTimings)
-                    ? <option value={formData.schoolTimings}>{formData.schoolTimings}</option>
-                    : null}
-                  {schoolTimingOptions.map((timing) => <option key={timing} value={timing}>{timing}</option>)}
-                </select>
-              </label>
+            </FieldRow>
+            <FieldRow label="Contact Number" errorKey="contactNumber">
+              <input {...getFieldProps('contactNumber')} value={formData.contactNumber} onChange={(e) => setField('contactNumber', e.target.value)} placeholder="Enter Mobile No" />
+            </FieldRow>
+            <FieldRow label="School Timings" errorKey="schoolTimings">
+              <select {...getFieldProps('schoolTimings')} value={formData.schoolTimings} onChange={(e) => setField('schoolTimings', e.target.value)}>
+                <option value="">Select School Timings</option>
+                {formData.schoolTimings && !schoolTimingOptions.includes(formData.schoolTimings)
+                  ? <option value={formData.schoolTimings}>{formData.schoolTimings}</option>
+                  : null}
+                {schoolTimingOptions.map((timing) => <option key={timing} value={timing}>{timing}</option>)}
+              </select>
+            </FieldRow>
             </div>
           </section>
 
@@ -484,8 +575,7 @@ const AdminSetup = () => {
               <span>System Details</span>
             </h2>
             <div className="fields-grid one-col">
-              <label>
-                Language
+              <FieldRow label="Language" errorKey="language">
                 <select {...getFieldProps('language')} value={formData.language} onChange={(e) => setField('language', e.target.value)}>
                   <option value="">Select Language</option>
                   {formData.language && !languageOptions.includes(formData.language)
@@ -493,14 +583,13 @@ const AdminSetup = () => {
                     : null}
                   {languageOptions.map((language) => <option key={language} value={language}>{language}</option>)}
                 </select>
-              </label>
-              <label>
-                Time Zone
+              </FieldRow>
+              <FieldRow label="Time Zone" errorKey="timeZone">
                 <select {...getFieldProps('timeZone')} value={formData.timeZone} onChange={(e) => setField('timeZone', e.target.value)}>
                   <option value="">Enter TimeZone</option>
                   {timeZones.map((zone) => <option key={zone} value={zone}>{zone}</option>)}
                 </select>
-              </label>
+              </FieldRow>
              
               <div className="roles-row">
                 <span className="roles-title">User Roles</span>
@@ -519,15 +608,13 @@ const AdminSetup = () => {
               <span>Fee & Finance</span>
             </h2>
             <div className="fields-grid one-col">
-              <label>
-                Currency
-                <select value={formData.currency} onChange={(e) => setField('currency', e.target.value)}>
+              <FieldRow label="Currency" errorKey="currency">
+                <select {...getFieldProps('currency')} value={formData.currency} onChange={(e) => setField('currency', e.target.value)}>
                   <option value="">Select Currency</option>
                   {currencies.map((currency) => <option key={currency} value={currency}>{currency}</option>)}
                 </select>
-              </label>
-              <label>
-                Bank & Branch
+              </FieldRow>
+              <FieldRow label="Bank & Branch" errorKey="bankBranch">
                 <select {...getFieldProps('bankBranch')} value={formData.bankBranch} onChange={(e) => handleBankBranchChange(e.target.value)}>
                   <option value="">Select Bank and Branch</option>
                   {bankBranchOptions.map((option) => (
@@ -536,9 +623,8 @@ const AdminSetup = () => {
                     </option>
                   ))}
                 </select>
-              </label>
-              <label>
-                Account Number
+              </FieldRow>
+              <FieldRow label="Account Number" errorKey="accountNumber">
                 <input
                   {...getFieldProps('accountNumber')}
                   value={formData.accountNumber}
@@ -546,25 +632,23 @@ const AdminSetup = () => {
                   placeholder="Enter Account Number"
                   inputMode="numeric"
                 />
-              </label>
-              <label>
-                IFSC Code
+              </FieldRow>
+              <FieldRow label="IFSC Code" errorKey="ifscCode">
                 <input
                   {...getFieldProps('ifscCode')}
                   value={formData.ifscCode}
                   onChange={(e) => setField('ifscCode', e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 11))}
                   placeholder="Enter IFSC Code"
                 />
-              </label>
-              <label>
-                Tax / GST Number
+              </FieldRow>
+              <FieldRow label="Tax / GST Number" errorKey="taxGstNumber">
                 <input
                   {...getFieldProps('taxGstNumber')}
                   value={formData.taxGstNumber}
                   onChange={(e) => setField('taxGstNumber', e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 15))}
                   placeholder="33ABCDE1234F1Z5"
                 />
-              </label>
+              </FieldRow>
             </div>
           </section>
         </div>
@@ -587,8 +671,9 @@ const AdminSetup = () => {
             </div>
           </div>
         ) : null}
+        </div>
       </div>
-    </div>
+    </FieldRowContext.Provider>
   )
 }
 
