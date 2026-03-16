@@ -4,7 +4,7 @@ import { useLocation, useNavigate, Link } from 'react-router-dom'
 import forgotImg from '../../../assets/images/forgot.png'
 
 const ForgotOtp = () => {
-  const OTP_VALIDITY_SECONDS = 45
+  const OTP_VALIDITY_SECONDS = 300
   const navigate = useNavigate()
   const location = useLocation()
   const username = location.state?.username || ''

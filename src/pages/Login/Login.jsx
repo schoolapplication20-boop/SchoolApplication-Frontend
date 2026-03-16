@@ -19,7 +19,7 @@ import {
 } from '../../utils/authStorage'
 import { getPostLoginRoute, setActiveLoginUser } from '../../utils/adminSetupStorage'
 
-const OTP_VALIDITY_SECONDS = 45
+const OTP_VALIDITY_SECONDS = 300
 
 const Login = () => {
   const navigate = useNavigate()
