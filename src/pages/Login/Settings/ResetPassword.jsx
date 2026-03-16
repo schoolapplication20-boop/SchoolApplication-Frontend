@@ -4,6 +4,7 @@ import Visibility from '@mui/icons-material/Visibility'
 import VisibilityOff from '@mui/icons-material/VisibilityOff'
 import { getStoredCredentials, saveNewPassword } from '../../../utils/authStorage'
 import { setActiveLoginUser } from '../../../utils/adminSetupStorage'
+import { markDummyUserResetDone } from '../../../utils/authService'
 import ResetSuccessfulScreen from './ResetSuccessfulScreen'
 import { useNavigate } from 'react-router-dom'
 
@@ -44,7 +45,11 @@ const ResetPassword = () => {
     }
 
     setTimeout(() => {
+      const currentUsername = (getStoredCredentials().username || '').toLowerCase()
       saveNewPassword(newPassword)
+      if (currentUsername.includes('@')) {
+        markDummyUserResetDone(currentUsername)
+      }
       setShowSuccessPopup(true)
       setPreviousPassword('')
       setNewPassword('')

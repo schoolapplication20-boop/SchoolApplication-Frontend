@@ -31,7 +31,7 @@ const defaultFormData = {
   emailId: '',
   website: '',
   principalName: '',
-  headmasterName: '',
+  CorrespondentName: '',
   authorizedPerson: '',
   contactNumber: '',
   medium: '',
@@ -96,7 +96,7 @@ const states = [
 const currencies = ['INR (Rs)']
 const mediums = ['English', 'Hindi', 'Telugu', 'Tamil', 'Kannada', 'Marathi', 'Bengali', 'Gujarati']
 const boards = ['CBSE', 'ICSE', 'State Board', 'IB', 'NIOS']
-const workingDaysOptions = ['-None-', 'Monday - Friday', 'Monday - Saturday']
+const workingDaysOptions = ['Monday - Friday', 'Monday - Saturday']
 const timeZones = ['IST (UTC+05:30)']
 const languageOptions = ['English', 'Hindi', 'Telugu', 'Tamil', 'Kannada', 'Marathi', 'Bengali', 'Gujarati', 'Urdu']
 const schoolTimingOptions = [
@@ -245,9 +245,9 @@ const AdminSetup = () => {
     if (!country) missingFieldErrors.country = 'Country is required'
     if (!phoneNumber) missingFieldErrors.phoneNumber = 'Phone Number is required'
     if (!emailId) missingFieldErrors.emailId = 'Email ID is required'
-    if (!website) missingFieldErrors.website = 'Website is required'
+    // if (!website) missingFieldErrors.website = 'Website is required'
     if (!principalName) missingFieldErrors.principalName = 'Principal Name is required'
-    if (!headmasterName) missingFieldErrors.headmasterName = 'Headmaster Name is required'
+    if (!headmasterName) missingFieldErrors.headmasterName = 'Correspondent Name is required'
     if (!authorizedPerson) missingFieldErrors.authorizedPerson = 'Authorized Person is required'
     if (!contactNumber) missingFieldErrors.contactNumber = 'Contact Number is required'
     if (!medium) missingFieldErrors.medium = 'Medium is required'
@@ -256,11 +256,11 @@ const AdminSetup = () => {
     if (!schoolTimings) missingFieldErrors.schoolTimings = 'School Timings are required'
     if (!language) missingFieldErrors.language = 'Language is required'
     if (!timeZone) missingFieldErrors.timeZone = 'Time Zone is required'
-    if (!currency) missingFieldErrors.currency = 'Currency is required'
-    if (!bankBranch) missingFieldErrors.bankBranch = 'Bank & Branch is required'
-    if (!accountNumber) missingFieldErrors.accountNumber = 'Account Number is required'
-    if (!ifscCode) missingFieldErrors.ifscCode = 'IFSC Code is required'
-    if (!taxGstNumber) missingFieldErrors.taxGstNumber = 'GST Number is required'
+    // if (!currency) missingFieldErrors.currency = 'Currency is required'
+    // if (!bankBranch) missingFieldErrors.bankBranch = 'Bank & Branch is required'
+    // if (!accountNumber) missingFieldErrors.accountNumber = 'Account Number is required'
+    // if (!ifscCode) missingFieldErrors.ifscCode = 'IFSC Code is required'
+    // if (!taxGstNumber) missingFieldErrors.taxGstNumber = 'GST Number is required'
 
     const fieldErrors = { ...missingFieldErrors }
 
@@ -310,7 +310,7 @@ const AdminSetup = () => {
         emailId,
         website,
         principalName,
-        headmasterName,
+        correspondentName,
         authorizedPerson,
         contactNumber,
         medium,
@@ -409,7 +409,7 @@ const AdminSetup = () => {
           </div>
           <div className="setup-header-actions">
             <button type="button" className="admin-btn" onClick={handleAdminJump}> Add Admin</button>
-            <button type="button" className="save-btn" onClick={handleSave} disabled={!formValidation.isComplete}>Save</button>
+            <button type="button" className="save-btn" onClick={handleSave}>Save</button>
           </div>
         </header>
 
@@ -536,8 +536,8 @@ const AdminSetup = () => {
                 {mediums.map((medium) => <option key={medium} value={medium}>{medium}</option>)}
               </select>
             </FieldRow>
-            <FieldRow label="Headmaster Name" errorKey="headmasterName">
-              <input {...getFieldProps('headmasterName')} value={formData.headmasterName} onChange={(e) => setField('headmasterName', e.target.value)} placeholder="Enter HM Name" />
+            <FieldRow label="Correspondent Name" errorKey="correspondentName">
+              <input {...getFieldProps('correspondentName')} value={formData.correspondentName} onChange={(e) => setField('correspondentName', e.target.value)} placeholder="Enter Correspondent Name" />
             </FieldRow>
             <FieldRow label="Board" errorKey="board">
               <select {...getFieldProps('board')} value={formData.board} onChange={(e) => setField('board', e.target.value)}>
@@ -550,11 +550,19 @@ const AdminSetup = () => {
             </FieldRow>
             <FieldRow label="Working Days" errorKey="workingDays">
               <select {...getFieldProps('workingDays')} value={formData.workingDays} onChange={(e) => setField('workingDays', e.target.value)}>
-                {workingDaysOptions.map((days) => <option key={days} value={days === '-None-' ? '' : days}>{days}</option>)}
+                <option value="">Select Working Days</option>
+                {workingDaysOptions.map((days) => <option key={days} value={days}>{days}</option>)}
               </select>
             </FieldRow>
             <FieldRow label="Contact Number" errorKey="contactNumber">
-              <input {...getFieldProps('contactNumber')} value={formData.contactNumber} onChange={(e) => setField('contactNumber', e.target.value)} placeholder="Enter Mobile No" />
+              <input
+                {...getFieldProps('contactNumber')}
+                value={formData.contactNumber}
+                onChange={(e) => setField('contactNumber', e.target.value.replace(/\D/g, '').slice(0, 10))}
+                placeholder="Enter 10 digit mobile number"
+                inputMode="numeric"
+                maxLength={10}
+              />
             </FieldRow>
             <FieldRow label="School Timings" errorKey="schoolTimings">
               <select {...getFieldProps('schoolTimings')} value={formData.schoolTimings} onChange={(e) => setField('schoolTimings', e.target.value)}>

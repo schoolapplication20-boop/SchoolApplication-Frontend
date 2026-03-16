@@ -18,6 +18,8 @@ import {
   setStoredCredentials,
 } from '../../utils/authStorage'
 import { getPostLoginRoute, setActiveLoginUser } from '../../utils/adminSetupStorage'
+import { mockLogin, ROLE_ROUTES, isDummyUserFirstLogin } from '../../utils/authService'
+import DUMMY_USERS from '../../utils/dummyUsers'
 
 const OTP_VALIDITY_SECONDS = 300
 
@@ -25,17 +27,19 @@ const Login = () => {
   const navigate = useNavigate()
 
   const [formData, setFormData] = useState({
-    username: '',
+    email: '',
     password: '',
     mobileNumber: '',
     remember: false,
   })
 
   const [showPassword, setShowPassword] = useState(false)
+  const [loginError, setLoginError] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
   const [otpSent, setOtpSent] = useState(false)
   const [otpInput, setOtpInput] = useState('')
   const [otpTimer, setOtpTimer] = useState(0)
-  const [loginMode, setLoginMode] = useState('username')
+  const [loginMode, setLoginMode] = useState('email')
 
   const isOtpExpired = otpSent && otpTimer === 0
 
@@ -64,6 +68,7 @@ const Login = () => {
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
     setFormData((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }))
+    if (loginError) setLoginError('')
   }
 
   const handleMobileChange = (e) => {
@@ -76,68 +81,101 @@ const Login = () => {
     setOtpInput(digits)
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
+    setLoginError('')
 
     if (!formData.remember) {
       alert('You must agree to the Terms & Privacy to continue')
       return
     }
 
-    if (loginMode === 'username') {
-      const username = (formData.username || '').trim().toLowerCase()
+    if (loginMode === 'email') {
+      const email = (formData.email || '').trim().toLowerCase()
       const pwd = formData.password || ''
-      const storedCredentials = getStoredCredentials()
-      const storedUsername = (storedCredentials.username || '').trim().toLowerCase()
-      const savedPassword = localStorage.getItem(`schoolers_password_${username}`)
 
-      if (!username || !pwd) {
-        alert('Please enter username and password')
+      if (!email || !pwd) {
+        setLoginError('Please enter email and password')
         return
       }
 
+      // --- Dummy user authentication ---
+      const isDummyUser = DUMMY_USERS.some((u) => u.email === email)
+      if (isDummyUser) {
+        setIsLoading(true)
+        try {
+          if (isDummyUserFirstLogin(email)) {
+            // First login: validate the default dummy password, then force reset
+            const user = await mockLogin(email, pwd)
+            setStoredCredentials({ username: user.email, password: pwd, needsPasswordReset: true })
+            localStorage.setItem(`schoolers_password_${user.email}`, pwd)
+            navigate('/reset-password', { state: { fromDefaultLogin: true } })
+          } else {
+            // Subsequent logins: validate against the password set after reset
+            const savedPassword = localStorage.getItem(`schoolers_password_${email}`)
+            if (pwd !== savedPassword) {
+              setLoginError('Invalid email or password')
+              return
+            }
+            const dummyUser = DUMMY_USERS.find((u) => u.email === email)
+            setActiveLoginUser(email)
+            navigate(ROLE_ROUTES[dummyUser.role])
+          }
+        } catch {
+          setLoginError('Invalid email or password')
+        } finally {
+          setIsLoading(false)
+        }
+        return
+      }
+      // --- End dummy user authentication ---
+
+      const storedCredentials = getStoredCredentials()
+      const storedUsername = (storedCredentials.username || '').trim().toLowerCase()
+      const savedPassword = localStorage.getItem(`schoolers_password_${email}`)
+
       const isDummyResetCredential = DUMMY_RESET_CREDENTIALS.some(
-        (cred) => cred.username === username && cred.password === pwd,
+        (cred) => cred.username === email && cred.password === pwd,
       )
 
       // Let known dummy credentials always enter reset flow, even if a stale
       // per-user password is still present from an older session.
       if (isDummyResetCredential) {
-        setStoredCredentials({ username, password: pwd, needsPasswordReset: true })
-        localStorage.setItem(`schoolers_password_${username}`, pwd)
+        setStoredCredentials({ username: email, password: pwd, needsPasswordReset: true })
+        localStorage.setItem(`schoolers_password_${email}`, pwd)
         navigate('/reset-password', { state: { fromDefaultLogin: true } })
         return
       }
 
       if (savedPassword !== null) {
         const matchesSavedPassword = pwd === savedPassword
-        const matchesStoredPassword = username === storedUsername && pwd === storedCredentials.password
+        const matchesStoredPassword = email === storedUsername && pwd === storedCredentials.password
 
         if (!matchesSavedPassword && !matchesStoredPassword) {
           alert('Invalid Credentials')
           return
         }
 
-        // Keep username password key aligned if auth storage was updated first.
+        // Keep email password key aligned if auth storage was updated first.
         if (!matchesSavedPassword && matchesStoredPassword) {
-          localStorage.setItem(`schoolers_password_${username}`, storedCredentials.password)
+          localStorage.setItem(`schoolers_password_${email}`, storedCredentials.password)
         }
 
-        if (storedUsername === username && storedCredentials.needsPasswordReset) {
+        if (storedUsername === email && storedCredentials.needsPasswordReset) {
           navigate('/reset-password', { state: { fromDefaultLogin: true } })
         } else {
-          setActiveLoginUser(username)
-          navigate(getPostLoginRoute(username))
+          setActiveLoginUser(email)
+          navigate(getPostLoginRoute(email))
         }
         return
       }
 
-      if (username === storedUsername && pwd === storedCredentials.password) {
+      if (email === storedUsername && pwd === storedCredentials.password) {
         if (storedCredentials.needsPasswordReset) {
           navigate('/reset-password', { state: { fromDefaultLogin: true } })
         } else {
-          setActiveLoginUser(username)
-          navigate(getPostLoginRoute(username))
+          setActiveLoginUser(email)
+          navigate(getPostLoginRoute(email))
         }
         return
       }
@@ -241,14 +279,14 @@ const Login = () => {
                     type="radio"
                     name="loginMode"
                     id="modeUsername"
-                    value="username"
-                    checked={loginMode === 'username'}
+                    value="email"
+                    checked={loginMode === 'email'}
                     onChange={() => {
-                      setLoginMode('username')
+                      setLoginMode('email')
                       resetOtpState()
                     }}
                   />
-                  <label className="form-check-label" htmlFor="modeUsername">Login with Username</label>
+                  <label className="form-check-label" htmlFor="modeUsername">Login with Email</label>
                 </div>
                 <div className="form-check">
                   <input
@@ -267,14 +305,15 @@ const Login = () => {
                 </div>
               </div>
 
-              {loginMode === 'username' && (
+              {loginMode === 'email' && (
                 <>
-                  <label className="input-label">Username</label>
+                  <label className="input-label">Email</label>
                   <TextField
-                    name="username"
+                    name="email"
+                    type="email"
                     variant="outlined"
-                    placeholder="Enter Username"
-                    value={formData.username}
+                    placeholder="Enter Email"
+                    value={formData.email}
                     onChange={handleChange}
                     fullWidth
                     size="small"
@@ -365,7 +404,11 @@ const Login = () => {
                 />
               </div>
 
-              <Button type="submit" variant="contained" fullWidth size="large" className="login-btn mt-3" disabled={!formData.remember}>
+              {loginError && (
+                <p className="text-danger small mt-2 mb-0">{loginError}</p>
+              )}
+
+              <Button type="submit" variant="contained" fullWidth size="large" className="login-btn mt-3" disabled={!formData.remember || isLoading}>
                 Login
               </Button>
             </form>
