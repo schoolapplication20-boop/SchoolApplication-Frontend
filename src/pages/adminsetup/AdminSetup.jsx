@@ -245,7 +245,6 @@ const AdminSetup = () => {
     if (!country) missingFieldErrors.country = 'Country is required'
     if (!phoneNumber) missingFieldErrors.phoneNumber = 'Phone Number is required'
     if (!emailId) missingFieldErrors.emailId = 'Email ID is required'
-    if (!website) missingFieldErrors.website = 'Website is required'
     if (!principalName) missingFieldErrors.principalName = 'Principal Name is required'
     if (!headmasterName) missingFieldErrors.headmasterName = 'Headmaster Name is required'
     if (!authorizedPerson) missingFieldErrors.authorizedPerson = 'Authorized Person is required'
@@ -256,11 +255,6 @@ const AdminSetup = () => {
     if (!schoolTimings) missingFieldErrors.schoolTimings = 'School Timings are required'
     if (!language) missingFieldErrors.language = 'Language is required'
     if (!timeZone) missingFieldErrors.timeZone = 'Time Zone is required'
-    if (!currency) missingFieldErrors.currency = 'Currency is required'
-    if (!bankBranch) missingFieldErrors.bankBranch = 'Bank & Branch is required'
-    if (!accountNumber) missingFieldErrors.accountNumber = 'Account Number is required'
-    if (!ifscCode) missingFieldErrors.ifscCode = 'IFSC Code is required'
-    if (!taxGstNumber) missingFieldErrors.taxGstNumber = 'GST Number is required'
 
     const fieldErrors = { ...missingFieldErrors }
 
@@ -288,10 +282,12 @@ const AdminSetup = () => {
       }
     }
 
-    const bankAccountSummary = `Bank Name: ${selectedBankBranch.bank}`
-      + ` (${selectedBankBranch.branch})`
-      + `\nAccount Number: ${accountNumber}`
-      + `\nIFSC Code: ${ifscCode}`
+    const bankAccountSummary = (bankBranch && accountNumber && ifscCode && selectedBankBranch)
+      ? `Bank Name: ${selectedBankBranch.bank}`
+        + ` (${selectedBankBranch.branch})`
+        + `\nAccount Number: ${accountNumber}`
+        + `\nIFSC Code: ${ifscCode}`
+      : ''
 
     return {
       isComplete: Object.keys(missingFieldErrors).length === 0,
